@@ -1,50 +1,61 @@
 ---
 export interface Props {
-	post: any;
+  post: any;
 }
 
 const { post } = Astro.props;
 ---
 
-<article class="post-preview">
-	<a class="post-preview-link" href={post.url}>
-		<div class="publish-date">{post.publishDate}</div>
-		<h1 class="title">
-			{post.title}
-		</h1>
-	</a>
+<article class="post-preview-container">
+  {post.draft ? (
+    <div class="post-preview">
+      <div class="publish-date">{post.publishDate}</div>
+      <h1 class="title draft"> (Coming Soon) {post.title}</h1>
+    </div>
+  ) : (
+    <a href={post.url}>
+      <div class="post-preview">
+        <div class="publish-date">{post.publishDate}</div>
+        <h1 class="title">{post.title}</h1>
+      </div>
+    </a>
+  )}
 </article>
 
 <style>
-	.content :global(main > * + *) {
-		margin-top: 1rem;
-	}
+  .content :global(main > * + *) {
+    margin-top: 1rem;
+  }
 
-	.post-preview {
-		margin-bottom: 1rem;
-	}
+  .post-preview-container {
+    margin-bottom: 1rem;
+  }
 
-	.post-preview-link {
-		display: flex;
-		align-items: flex-start;
-	}
+  .post-preview {
+    display: flex;
+    align-items: flex-start;
+  }
 
-	.title,
-	.publish-date {
-		margin: 0;
-	}
+  .title,
+  .publish-date {
+    margin: 0;
+  }
 
-	.publish-date {
-		font-size: 1rem;
-		font-weight: normal;
-		color: var(--theme-text-lighter);
-		margin-right: 0.5rem;
-		width: 12ch;
-	}
+  .publish-date {
+    font-size: 1rem;
+    font-weight: normal;
+    color: var(--theme-text-lighter);
+    margin-right: 0.5rem;
+    width: 12ch;
+  }
 
-	.title {
-		font-size: 1rem;
-		font-weight: 400;
-		color: var(--theme-text);
-	}
+  .title {
+    font-size: 1rem;
+    font-weight: 400;
+    color: var(--theme-text);
+  }
+
+  .title.draft {
+    color: var(--theme-text-lighter);
+  }
 </style>
