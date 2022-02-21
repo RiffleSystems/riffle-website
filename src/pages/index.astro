@@ -41,7 +41,7 @@ allPosts = sortBy(allPosts, 'publishDate').reverse();
 			}
 
 			.content {
-				margin-top: 4rem;
+				margin-top: 2rem;
 				margin-bottom: 8rem;
 			}
 
@@ -50,22 +50,9 @@ allPosts = sortBy(allPosts, 'publishDate').reverse();
 			}
 
 			.content section {
-				margin-bottom: 20px;
+				margin-bottom: 4rem;
 			}
 
-			.intro {
-				padding-bottom: 4rem;
-				margin-bottom: 2rem;
-			}
-
-			.intro > * {
-				margin: 0;
-			}
-
-			.latest {
-				font-size: 2.5rem;
-				font-weight: 700;
-			}
 		</style>
 	</head>
 
@@ -73,12 +60,12 @@ allPosts = sortBy(allPosts, 'publishDate').reverse();
 		<BlogHeader />
 		<div class="wrapper">
 			<main class="content">
-				<section aria-label="Project description">
+				<section class="project-intro" aria-label="Project description">
 				<p>
-					A research project exploring a new approach to state management in local-first software.
+					A research project exploring new approaches to managing state in user interfaces.
 				</p>
 				<p>
-					A project by Geoffrey Litt, Nicholas Schiefer, and Daniel Jackson at MIT CSAIL.
+					By Geoffrey Litt, Nicholas Schiefer, and Daniel Jackson at MIT CSAIL.
 				</p>
 				</section>
 				<section aria-label="Blog post list">
