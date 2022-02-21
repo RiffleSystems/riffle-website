@@ -1,0 +1,50 @@
+---
+export interface Props {
+	post: any;
+}
+
+const { post } = Astro.props;
+---
+
+<article class="post-preview">
+	<a class="post-preview-link" href={post.url}>
+		<div class="publish-date">{post.publishDate}</div>
+		<h1 class="title">
+			{post.title}
+		</h1>
+	</a>
+</article>
+
+<style>
+	.content :global(main > * + *) {
+		margin-top: 1rem;
+	}
+
+	.post-preview {
+		margin-bottom: 1rem;
+	}
+
+	.post-preview-link {
+		display: flex;
+		align-items: flex-start;
+	}
+
+	.title,
+	.publish-date {
+		margin: 0;
+	}
+
+	.publish-date {
+		font-size: 1rem;
+		font-weight: normal;
+		color: var(--theme-text-lighter);
+		margin-right: 0.5rem;
+		width: 12ch;
+	}
+
+	.title {
+		font-size: 1rem;
+		font-weight: 400;
+		color: var(--theme-text);
+	}
+</style>
