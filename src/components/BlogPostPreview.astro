@@ -9,8 +9,8 @@ const { post } = Astro.props;
 <article class="post-preview-container">
   {post.draft ? (
     <div class="post-preview">
-      <div class="publish-date">{post.publishDate}</div>
-      <h1 class="title draft"> (Coming Soon) {post.title}</h1>
+      <div class="publish-date">Soon</div>
+      <h1 class="title draft"> {post.title}</h1>
     </div>
   ) : (
     <a href={post.url}>
