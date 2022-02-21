@@ -406,7 +406,7 @@ Many things we haven’t had time for yet...
 
 ## Findings
 
-*things we learned from making the prototype*
+We see our work with our prototype as an exploratory experiments to understand our design principles in a serious context. As we iterated on our prototype, we came to some interesting conclusions.
 
 ### Declarative queries make data dependencies clear.
 
@@ -430,6 +430,8 @@ A standard web application might have several components that are reactive in on
 
 We have found that reactivity has super-linear benefits: when non-reactive parts of the stack are removed, we see dramatic conceptual simplifications. We would like to lean even further to this, and see how much of a full application can be expressed in an end-to-end reactive framework.
 
+- [ ]  Be more specific
+
 ### Data-based interoperability can be much better than action-based APIs.
 
 Since the introduction of object-oriented programming, most interoperability has been “verb-based”: that is, based on having programs call into each other using APIs. Indeed, new programmers are often taught to hide data behind APIs as much as possible in order to encapsulate state.
@@ -451,7 +453,7 @@ Traditional applications, especially web apps, tend to draw a sharp distinction 
 
 Our experiments suggest that this difference is actually quite fluid: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time. We found it quite nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model. While we didn’t tackle multi-device synchronization in this project, we see sync the same way: it’s more like a checkbox on a piece of state than a key modeling concern.
 
-### SQL is powerful and familiar, but it’s not a good language for writing apps.
+### SQL is powerful and familiar, not a good language all types of data.
 
 We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
 
@@ -492,24 +494,51 @@ We view these issues as shortcomings of *SQL in particular*, and not the idea of
 
 How is this different from?
 
+There is a rich, emerging landscape of tools that help app developers manage state. Here’s how we see Riffle in this landscape, using loose clusters and non-exhaustive lists of prior work:
+
+### Local-first CRDT-based state managers
+
+There is an emerging class of CRDT-based state management tools for building local-first software, including Automerge and Yjs. These expose a data structure with general-purpose semantics that handles the complexity of distributed, real-time sync. This has also been exposed in real-world applications, including Actual Budget, which implements CRDT-style sync between SQLite databases.
+
+Because of the amount of excellent prior work in this space, we have deliberately ignored the question of sync for now. In the short term, we imagine adding sync to our databases using OR-set semantics [CITE], in the style of James Long’s implementation for Actual Budget.
+
+While we share the goal of promoting powerful, local-first software, Riffle is designed to be less of a drop-in persistent state management tool and more of a totalizing, end-to-end manager for all application state. In particular, the reactive relational queries at the heart of Riffle lie outside of the domain of concern for CRDT libraries. This more structured approach to app development allows unique features like our data-centric debugging UI.
+
 - **Local-first CRDT-based state managers**
     - Actual Budget, Automerge / Yjs, etc
     - lots of shared goals
     - We’re focussed on deriving things from data, not how the data are stored
     - difference: more focus on queries, data constraints, debugging UI itself
+
+### Cloud-based full-stack reactivity
+
+@Geoffrey Litt to write, I don’t know anything about this space.
+
 - **Cloud Full-stack reactivity**
     - Meteor
     - Firebase
-- Relational EUP
-    - Airtable
+
+
+### Relational end-user programming tools
+
+We find a lot of inspiration in tools like Airtable, which draw from the relational model to create extremely powerful tools targeted at end users. Airtable is a remarkably productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers. Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
+
+Unlike Airtable, Riffle aims to add powerful new abstractions to the toolkit of sophisticated developers, in addition to serving novices and end-users. We are concerned with exposing the full power of the relational query model, and want to avoid technical limitations such as Airtable’s 50,000 record-per-base limit.
+
+Put another way: you can’t use Airtable to write iTunes, but we’ve been able to use Riffle to make myTunes.
+
+### Relational tree languages
+
 - Relationally constructing UI trees
     - Imp
     - GraphQL
-- **Reactive UI / state management**
-    - Reactive state management for React.js: Recoil, Jotai
-    - Alternate frameworks: SolidJS, Svelte
-    - Spreadsheets
-    - Jane St Incremental + incr-dom
+
+### Reactive UI state frameworks
+
+- Reactive state management for React.js: Recoil, Jotai
+- Alternate frameworks: SolidJS, Svelte
+- Spreadsheets
+- Jane St Incremental + incr-dom
 - Incremental computation, including incremental SQL
     - Jane St Incremental
     - Incremental view maintenance systems
@@ -517,3 +546,14 @@ How is this different from?
     - Differential Datalog
     - Noria (MIT project)
     - SQLive
+
+## meta notes / open questions
+
+- give more precise perf numbers?
+- run the demo live in the page?
+- where to mention that myTunes is a real project?
+- potential feedback givers:
+    - johannes
+    - pvh
+    - martin
+    - james long
