@@ -129,7 +129,8 @@ nav ul {
 }
 
 :is(h2, h3, h4, h5, h6) {
-  margin-bottom: 1.38rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.25rem;
   font-weight: 400;
 }
 

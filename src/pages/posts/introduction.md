@@ -29,26 +29,44 @@ We share some concrete examples of building software using Riffle, and demonstra
 
 ## The Riffle Architecture
 
-A typical modern web app has many layers of data representations across the backend and frontend. For example, an app might have:
+Modern web applications have many layers of data representations spanning across the backend and frontend. For example, a "simple" todos app might have:
 
-- A relational database for persisting data, queried with SQL
-- An ORM mapping relational data into in-memory objects, manipulated in a server-side language
-- A REST or GraphQL API describing this data in a JSON-serialized form, manipulated with HTTP requests
-- Javascript objects representing the data in a rich client-side application, further queried and manipulated in Javascript
+- A relational database queried with SQL, with tables like `todos` and `projects`
+- An ORM mapping the relational database to in-memory objects, manipulated in a server-side language like Ruby or Node.JS
+- A REST or GraphQL API describing this data in a serialized form, and allowing read/writes via HTTP requests
+- Javascript objects representing the data in a rich client-side application, further queried and manipulated in Javascript. For example, the UI might have a toggle for completed todos, or a dropdown to switch between projects, implemented using client-side filtering.
 
 ![](../../../public/assets/blog/introduction/many-layers.png)
 
-Much of the effort of building an application goes into synchronizing data across these layers. Often, adding a feature requires writing query code in three or four distinct languages. It helps if the server-side datastore is the source of truth, because the client is then just a temporary cache that can be blown away. However, adding offline mode (an important feature for many apps) breaks this constraint, and creates a distributed system where the local client's source of truth can diverge from the server, creating even more manual work for application developers.
+While each layer is arguably justified on its own, working across all these layers results in tremendous complexity. Adding a new feature requires thinking about SQL queries, ORM models, REST APIs, and Javascript objects. To reason about performance, developers must manually design caching and indexing strategies at every level of the stack. As the overall complexity of a system increases, many developers choose to specialize in one narrow part rather than work "full-stack". The profileration of layers serves as a barrier to entry, preventing many beginners from even getting started.
 
-- This is madness! Extra work for app devs, huge barrier to entry for new devs. How can we simplfy?
+We see an opportunity to dramatically simplify this stack by taking a more integrated approach to state management. Different simplifications make sense in different contexts: for example, traditional server-side-rendered apps are simpler than rich client-side apps, but are not a good fit for highly interactive applications like an email client, a music player, or a game. Our goal is a simpler stack for highly interactive multi-device applications, which improves both the developer and end-user experience.
 
-- Part 1 is **Local-first:** put all data in the client, sync automatically behind the scenes when network is available. We won't cover sync in this post (that's the next post)--for now, we focus on the simplifying assumptions we can make from having all data client-side. (Sidebar: address access control)
+### Local-first
 
-- Part 2: **relational** DB as our model. This is super common in backend: normalized data useful, relational queries useful. Less common in frontend, but we think having a relational query model in our client UI is really convenient (and performant)! (cite Datascript, Actual?) Can do all your querying in a relational lang, no ORM needed.
+The foundation of our approach is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is available locally on the client, and can be freely modified at any time. To collaborate across devices or users, changes are synchronized whenever a network connection is available.
+
+A local-first state management framework provides an appealingly simple mental model for the application developer: just read and write local data, and let the state manager figure out how to synchronize that data across devices, either through a traditional server or even peer-to-peer. It can also provide a superior user experience: applications are fast and usable by default, even in spotty or nonexistent network conditions, and the user has more ownership over the data since it lives on their device.
+
+There is a tradeoff: this architecture requires reasoning about concurrent changes made by different clients, without centralized coordination from a server. Existing solutions like Automerge, Yjs and LiveBlocks use CRDTs as an underlying technology for addressing these problems. In our next essay we will address synchronization challenges, but for now we instead focus on the implications for the development within a single client app. What further opportunities are there for simplifying the stack, if we assume that all data is available locally?
+
+### Reactive relational queries
+
+The state that is synchronized across devices is usually a minimal normalized representation, which must be further queried, denormalized, and reshaped in order to hydrate the user interface. For example, if a list of todos and projects is synced across users, each client might do its own joins and filters across those collections locally. In simple cases, a few lines of JavaScript code might suffice for this, but as the data model becomes more complex, it becomes more cumbersome to write down these kinds of ad-hoc queries and to keep them performant.
+
+We think the **relational model** is a good fit for solving this class of problems for many applications. Data can be stored in normalized relations, and declaratively queried into the desired form for the UI. Writing queries in a declarative style makes them easier to write/read for developers, and allows a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development; it's also a common approach in many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in frontend web development, but we think it is a pattern that deserves to be more widely used.
+
+aside: As we'll discuss throughout this piece, SQL has some shortcomings as a relational language that make it difficult to express certain kinds of queries. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
+
+To maximize ease of use, relational queries in an application should be **reactive**—instead of treating queries as expensive one-off operations, application developers should register _reactive relational_ queries, and expect their results to be automatically updated. Reactive systems make it easier for developers to build applications without remembering to manually track dependencies and propagate updates, as shown by systems ranging from spreadsheets to reactive UI libraries like React and Svelte.
+
+Performance is an essential quality for a reactive UI system—if the system can guarantee that updates happen very quickly even as the application and its data grow complex, this simplifies the mental model for both the developer and the user, because there's less of a need to worry about stale data or in-progress asynchronous updates. The relational model has a lot to offer here. First, the database community has spent considerable effort making it fast to execute relational queries, so even a naive reactive strategy of re-running queries from scratch (which we use in our current prototype) can be very fast.
+
+- Part 2: **reactive** queries. User defines queries, system takes care of maintaining them as data in the DB changes. Familiar benefits from React.JS, spreadsheets, etc. In our current prototype, we just re-run queries a lot, which is naive way of doing this but fast enough because SQLite is fast. If you throw fancy incremental maintenance tech at the problem, could be lot faster than re-execution though. sql can be incrementalized
 
 ![](../../../public/assets/blog/introduction/derived-relational.png)
 
-- Part 3: **reactive** queries. User defines queries, system takes care of maintaining them as data in the DB changes. Familiar benefits from React.JS, spreadsheets, etc. In our current prototype, we just re-run queries a lot, which is naive way of doing this but fast enough because SQLite is fast. If you throw fancy incremental maintenance tech at the problem, could be lot faster than re-execution though.
+### Unified state
 
 - Part 4: **unified state**. If your client-side DB is so fast that it can re-execute all your reactive queries in 16ms, unlocks new possibilities. Just throw all your UI state in there, even local component state. Doesn't need to be persistent. Familiar benefits from "state management frameworks" in react. Having all your state managed in one system is simpler: eg, you can 1) use component state in your queries, 2) flexibly decide when to share UI state across users / persist UI state, 3) can see/edit all UI state in other tools that can access the DB
 
