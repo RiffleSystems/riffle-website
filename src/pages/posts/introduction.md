@@ -1,7 +1,7 @@
 ---
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
-title: "Simplifying the stack with reactive relational local-first state"
+title: Simplifying the UI stack with local data
 publishDate: 28 Feb 2022
 draft: false
 description:
@@ -24,31 +24,35 @@ One promising foundation is a [local-first](https://www.inkandswitch.com/local-f
 
 aside: In addition to benefits for developers, local-first software offers numerous benefits for end-users: for example, users have greater ownership and control over their own data, and an app can remain usable when the network is poor or nonexistent.
 
-There are tools like Automerge, Yjs and LiveBlocks that are aiming to help developers build software in this way, using CRDTs to help reconcile concurrent changes without a central server. The scope of these tools is generally limited to syncing a data structure across clients; for other parts of UI development like querying and rendering data, they integrate with existing libraries like React.js or Redux. This is obviously a pragmatic decision, but it also limits the scope of changes. Most client-side web UI technologies were invented in a context where the data lives far away on a server—an assumption which isn't true in local-first software. Might there be opportunities to rethink the broader UI stack given this new context?
+There are tools that aim to help developers build software in this way, by using CRDTs to synchronize changes and converge across clients without needing a central server—examples include Automerge, Yjs, and Liveblocks. In one sense, these tools propose a dramatic change to the architecture of an application, but in another sense, their scope is limited, since they're typically designed to integrate with familiar patterns and libraries for frontend UI web development (like React.js). This is obviously a pragmatic decision for near-term adoption, but it also limits the scope of change. Most web UI technologies were developed in a very different context where most of the data was assumed to live far away on a server, so it's not immediately apparent that they're well-suited to building apps in this new context.
 
-In the Riffle project, we seek to explore the full, broader implications of this shift. How might we fundamentally rethink UI state management in a context where all the data is available locally? Can we design more integrated approaches that make it easier to build, maintain, and debug applications? Can we make apps more performant by default? Could we give end users more power to customize and compose the software they use every day? In this essay, we describe some of the specific opportunities we're interested in, and describe our learnings from building an initial prototype.
+In the Riffle project, we're interested in exploring the full, broader implications of this shift. How might we fundamentally rethink UI state management in a context where all the data is available locally? Can we design more integrated approaches that make it easier to build, maintain, and debug applications? Can we make apps more performant by default? Could we give end users more power to customize and compose the software they use every day? In this essay, we describe some of specific approaches we find promising, and describe our learnings from building an initial prototype.
 
-## Opportunities
+## Approaches
 
-### Building with relational queries
+Here are a few opportunities we see for approaching client-side UI development differently given a local-first architecture.
 
-Most applications have some base state which has a canonical normalized representation to ensure data integrity. This base state must be further queried, denormalized, and reshaped before it can populate the user interface—for example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display.
+### Client-side relational queries
 
-As mentioned earlier, in traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it would be totally possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
+Most applications have some base state which has a canonical normalized representation to ensure data integrity. This base state must be further queried, denormalized, and reshaped before it can populate the user interface—for example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display. In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it's possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
 
-We think that a good answer for many applications is to use a **relational model** to express queries within the client UI code. Declarative queries often express intent more concisely than imperative code, and also allow a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be more widely used. [cite Actual Budget?]
+We think that a good answer for many applications is to use a **relational model** to express queries within the client UI code. Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be more widely used. [cite Actual Budget?]
 
 aside: As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
 
 ### Pervasive, fast reactivity
 
-Application developers are used to thinking of database queries as expensive operations that must be carefully managed, because the database is across a network boundary. Often, applications only pull new data when the code decides to make an explicit request; doing real-time pushes requires carefully designing a manual approach to sharing diffs.
+Application developers are used to thinking of database queries as expensive operations that must be carefully managed because the database is across a slow network boundary. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
-In a local-first architecture, we can instead use a **reactive model**, where the developer registers reactive queries, which automatically update whenever the relevant data changes. These kinds of reactive systems make it easier for developers to build applications without remembering to manually track dependencies and propagate updates, as shown by systems ranging from spreadsheets to reactive UI libraries like React and Svelte.
+In a local-first architecture, we can instead use a **reactive model**, where the developer registers reactive queries which automatically update whenever the relevant data changes. These kinds of reactive systems make it easier for developers to build applications without remembering to manually track dependencies and propagate updates, as shown by systems ranging from spreadsheets to reactive UI libraries like React and Svelte.
 
-Performance is an essential quality for a reactive UI system—if the system can guarantee that updates happen very quickly even as the application and its data grow complex, this simplifies the mental model for both the developer and the user, because there's less of a need to worry about stale data or in-progress asynchronous updates. The relational model is very attractive in this regard—first, the database community has spent considerable effort making it fast to execute relational queries, so even a naive reactive strategy of re-running queries from scratch (which we use in our current prototype) can be very fast. Even better, there's also research on incrementally maintaining relational queries (cite: Materialize, SQLive, Differential Datalog) which substantially reduces the overhead relative to re-running from scratch.
+[todo: note that it's reactivity on the downstream queries not just the base state; also cite Pushpin / DFRP?]
 
-### All state in one system
+Performance is a critical quality for a reactive UI system. If the system can guarantee that updates happen very quickly even as the application and its data grow complex, this simplifies the mental model for both the developer and the user, because there's less of a need to worry about stale data or in-progress asynchronous updates. Pairing reactivity with the relational model has promising performance characteristics. First, the database community has spent considerable effort making it fast to execute relational queries, so even a naive reactive strategy of re-running queries from scratch (which we use in our current prototype) can be very fast. Even better, there's also research on incrementally maintaining relational queries (cite: Materialize, SQLive, Differential Datalog) which substantially reduces the overhead relative to re-running from scratch.
+
+### Unified state management
+
+
 
 - Part 4: **unified state**. If your client-side DB is so fast that it can re-execute all your reactive queries in 16ms, unlocks new possibilities. Just throw all your UI state in there, even local component state. Doesn't need to be persistent. Familiar benefits from "state management frameworks" in react. Having all your state managed in one system is simpler: eg, you can 1) use component state in your queries, 2) flexibly decide when to share UI state across users / persist UI state, 3) can see/edit all UI state in other tools that can access the DB
 
@@ -520,7 +524,7 @@ Because of the amount of excellent prior work in this space, we have deliberatel
 While we share the goal of promoting powerful, local-first software, Riffle is designed to be less of a drop-in persistent state management tool and more of a totalizing, end-to-end manager for all application state. In particular, the reactive relational queries at the heart of Riffle lie outside of the domain of concern for CRDT libraries. This more structured approach to app development allows unique features like our data-centric debugging UI.
 
 - **Local-first CRDT-based state managers**
-    - Actual Budget, Automerge / Yjs, etc
+    - Actual Budget, Automerge / Yjs, Braid
     - lots of shared goals
     - We’re focussed on deriving things from data, not how the data are stored
     - difference: more focus on queries, data constraints, debugging UI itself
