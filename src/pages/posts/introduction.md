@@ -17,37 +17,48 @@ Building a local-first application introduces many tricky challenges related to 
 
 Our approach is to build on three ideas, taking each to an extreme:
 
-***Relational**:* Build around a relational data model and query language. This provides a flexible structured foundation for data modeling, even across application boundaries.
+**Relational**: Build around a relational data model and query language. This provides a flexible structured foundation for data modeling, even across application boundaries.
 
-***Reactive**:* Tracking dependencies and automatically updating downstream state is a proven idea in systems ranging from spreadsheets to React.js. By building around a carefully structured reactivity model, we can make a user interface much easier to reason about for users and for developers.
+**Reactive**: Tracking dependencies and automatically updating downstream state is a proven idea in systems ranging from spreadsheets to React.js. By building around a carefully structured reactivity model, we can make a user interface much easier to reason about for users and for developers.
 
-***Universal**:* Blur the boundary between “app state” and “UI state”, managing both in one system. This enables thinking more flexibly about the role of different bits of state, e.g. making it easy to share or persist data.
+**Unified**: Blur the boundary between “app state” and “UI state”, managing both in one system. This enables thinking more flexibly about the role of different bits of state, e.g. making it easy to share or persist data.
 
 In this essay we describe an early prototype of Riffle, a state management system based on these ideas. The prototype uses SQLite as a storage and query engine, and React.js as a rendering layer, targeting both in-browser apps as well as a desktop app using Tauri. Riffle is far from complete, but we hope that sharing our initial learnings might provide some value.
 
 We share some concrete examples of building software using Riffle, and demonstrate some of the powerful capabilities suggested by the approach. We also share some of the challenges we have encountered, some of which are incidental engineering problems, but some of which point to deeper research challenges.
 
-## Architecture comparison
+## The Riffle Architecture
 
-diff against a normal architecture
+A typical modern web app has many layers of data representations across the backend and frontend. For example, an app might have:
 
-- Unified:
-    - all state in one thing
-    - sharing, persistence: Just checkboxes
-    - flexible scripting, full benefits of “data as API”
-- Reactive
-    - easy, a la React
-    - deep reactive:
-        - provenance, visible structure
-        - speed
-- Relational
-    - normal benefits in backend: structured schema, normalized data nice for integrity
-    - extra benefits in this scenario: flexible schema ⇒ interop
-    - some drawbacks
+- A relational database for persisting data, queried with SQL
+- An ORM mapping relational data into in-memory objects, manipulated in a server-side language
+- A REST or GraphQL API describing this data in a JSON-serialized form, manipulated with HTTP requests
+- Javascript objects representing the data in a rich client-side application, further queried and manipulated in Javascript
 
-## Example Scenario
+![](../../../public/assets/blog/introduction/many-layers.png)
 
-In this section, we’ll concretely demonstrate the Riffle model by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
+Much of the effort of building an application goes into synchronizing data across these layers. Often, adding a feature requires writing query code in three or four distinct languages. It helps if the server-side datastore is the source of truth, because the client is then just a temporary cache that can be blown away. However, adding offline mode (an important feature for many apps) breaks this constraint, and creates a distributed system where the local client's source of truth can diverge from the server, creating even more manual work for application developers.
+
+- This is madness! Extra work for app devs, huge barrier to entry for new devs. How can we simplfy?
+
+- Part 1 is **Local-first:** put all data in the client, sync automatically behind the scenes when network is available. We won't cover sync in this post (that's the next post)--for now, we focus on the simplifying assumptions we can make from having all data client-side. (Sidebar: address access control)
+
+- Part 2: **relational** DB as our model. This is super common in backend: normalized data useful, relational queries useful. Less common in frontend, but we think having a relational query model in our client UI is really convenient (and performant)! (cite Datascript, Actual?) Can do all your querying in a relational lang, no ORM needed.
+
+![](../../../public/assets/blog/introduction/derived-relational.png)
+
+- Part 3: **reactive** queries. User defines queries, system takes care of maintaining them as data in the DB changes. Familiar benefits from React.JS, spreadsheets, etc. In our current prototype, we just re-run queries a lot, which is naive way of doing this but fast enough because SQLite is fast. If you throw fancy incremental maintenance tech at the problem, could be lot faster than re-execution though.
+
+- Part 4: **unified state**. If your client-side DB is so fast that it can re-execute all your reactive queries in 16ms, unlocks new possibilities. Just throw all your UI state in there, even local component state. Doesn't need to be persistent. Familiar benefits from "state management frameworks" in react. Having all your state managed in one system is simpler: eg, you can 1) use component state in your queries, 2) flexibly decide when to share UI state across users / persist UI state, 3) can see/edit all UI state in other tools that can access the DB
+
+- Big picture: see the whole app as a reactive query over a DB. Query from state to DOM.
+
+## Our prototype system
+
+_todo: describe the system concretely before diving into the example. SQLite, React, Tauri, etc_
+
+In this section, we’ll concretely demonstrate our prototype system by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
 
 ![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ae4eb571-6c53-401c-b6fd-a57457b9a866/Untitled.png)
 
