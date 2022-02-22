@@ -56,7 +56,11 @@ Much of the effort of building an application goes into synchronizing data acros
 
 ## Our prototype system
 
-_todo: describe the system concretely before diving into the example. SQLite, React, Tauri, etc_
+- *Goal: prototype the experience of building an app in this style, learn about the problem*
+- *important: this is not the final thing! and it's nowhere close to a product*
+- Browser app: React + SQL.js + absurd-sql
+- Tauri app: browser UI + Sqlite-native
+- Our prototype: reactive graph around SQLite, + React hooks. Let's see by example.
 
 In this section, we’ll concretely demonstrate our prototype system by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
 
