@@ -536,16 +536,21 @@ While we share the goal of promoting powerful, local-first software, Riffle is d
 
 ### Relational end-user programming tools
 
-We find a lot of inspiration in tools like Airtable, which draw from the relational model to create extremely powerful tools targeted at end users. Airtable is a remarkably productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers. Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
+We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers. Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
+Nonetheless, Airtable has some significant limitations: its query facilities are limited by what can be expressed in its view UI, and it doesn't come close to expressing the full power of relational queries: it doesn't support general joins, or even nested and/or predicates.
+It also has some notable technical limitations, like the 50,000 record-per-base limit, that prevent it from handling even modest amounts of data.
 
-Unlike Airtable, Riffle aims to add powerful new abstractions to the toolkit of sophisticated developers, in addition to serving novices and end-users. We are concerned with exposing the full power of the relational query model, and want to avoid technical limitations such as Airtable’s 50,000 record-per-base limit.
+Riffle attacks the problem from a different direction: instead of aiming at extremely simple use cases, it starts by trying to express the full power of a relational model to experienced developers.
+We hope that these new abstractions can build a solid foundation on which higher-level tools can be built for end-users.
 
 Put another way: you can’t use Airtable to write iTunes, but we’ve been able to use Riffle to make myTunes.
 
 ### Relational tree languages
 
-- Relationally constructing UI trees
-    - Imp
+There are several other attempts at extending the relational model to produce tree-structured results like a DOM.
+Most notably, Jamie Brandon's [Imp](TK link) project constitutes several takes on relational langauges for definin UIs.
+Our project is highly aligned iwth the vision of Imp; the biggest difference is that we have been less willing to throw away existing tools entirely and more eager to make use them, in order to get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.
+
     - GraphQL
 
 ### Reactive UI state frameworks
