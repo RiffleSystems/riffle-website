@@ -11,11 +11,11 @@ Modern cloud applications are becoming increasingly complicated to build. To pro
 
 At the same time, the cloud architecture leaves much to be desired for end users. Data is locked away in cloud silos, only accessible to sip out through tightly controlled APIs, which makes it harder for users to compose tools together and customize their software. Cloud applications are often highly reliant on network availability, making them slow and unreliable. It is possible for developers to address these problems, but only by investing lots of effort to fight against the natural grain of the architecture.
 
-How can we make software easier to build for developers, and better to use for end users? One promising solution is *local-first software*, which locates data and application logic on end user devices rather than in a cloud server. Data can still be synchronized when a network is available, but the application is no longer fundamentally reliant on a backend server for its core functionality. The local-first architecture can help developers by eliminating layers of the stack, making it simpler to develop and deploy applications. It can also help users by giving them faster, more composable tools, and easier access to their own data.
+How can we make software easier to build for developers, and better to use for end users? One promising solution is *local-first software* [cite], which locates data and application logic on end user devices rather than in a cloud server. Data can still be synchronized when a network is available, but the application is no longer fundamentally reliant on a backend server for its core functionality. The local-first architecture can help developers by eliminating layers of the stack, making it simpler to develop and deploy applications. It can also help users by giving them faster, more composable tools, and easier access to their own data.
 
 Building a local-first application introduces many tricky challenges related to data management. So far, much effort has been focused on the important problem of merging concurrent changes, particularly using CRDTs. But we believe that there is a broader question which has not yet been fully explored: **if we assume a local-first architecture, how might this enable us to radically simplify the way that user interfaces are constructed?**
 
-We believe a promising strategy for answering this question is to apply existing ideas from databases research in a new context. Our approach contains three key ideas, none of which is new on its own, but together form a powerful combination:
+Our approach is to build on three ideas, taking each to an extreme:
 
 ***Relational**:* Build around a relational data model and query language. This provides a flexible structured foundation for data modeling, even across application boundaries.
 
@@ -23,9 +23,9 @@ We believe a promising strategy for answering this question is to apply existing
 
 ***Universal**:* Blur the boundary between “app state” and “UI state”, managing both in one system. This enables thinking more flexibly about the role of different bits of state, e.g. making it easy to share or persist data.
 
-In this essay we describe an early prototype of Riffle, a state management framework that embodies these ideas. The prototype leverages the SQLite embedded database as a storage and query engine, and uses React.js as a rendering layer for the web. Using existing technologies  enabled rapid prototyping to answer key questions about the developer experience, but also exposed some limitations of integrating with existing tools.
+In this essay we describe an early prototype of Riffle, a state management system based on these ideas. The prototype uses SQLite as a storage and query engine, and React.js as a rendering layer, targeting both in-browser apps as well as a desktop app using Tauri. Riffle is far from complete, but we hope that sharing our initial learnings might provide some value.
 
-We share some concrete examples of building software using Riffle, and demonstrate some of the powerful capabilities suggested by the approach. Riffle is still far from a usable product—we also share some of the challenges we have encountered, some of which are incidental engineering problems, but some of which point to deeper research challenges.
+We share some concrete examples of building software using Riffle, and demonstrate some of the powerful capabilities suggested by the approach. We also share some of the challenges we have encountered, some of which are incidental engineering problems, but some of which point to deeper research challenges.
 
 ## Architecture comparison
 
