@@ -523,6 +523,84 @@ We view these issues as shortcomings of *SQL in particular*, and not the idea of
 
 ## Towards a reactive, relational approach to state management
 
+Our early investigations suggest that a local-first, data-centric architecture radically simplifies some parts of app development.
+We also know that it is at least somewhat practical: we've managed to build a real app that works with moderate amounts of data and has good performance.
+These experiments make us particularly excited about the transferability of insights and technologies from the database reserach community to the domain of app development.
+
+### Component trees a queries
+
+This version or Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
+Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
+
+[TK insert picture]
+
+In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
+So, we could view the queries and template together as a large, tree-structured view of the data.
+
+We can extend this perspective even further: each component takes some arguments (props, in React parlance), which might themselves be queries, but are also a pure function of the data.
+We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
+This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
+
+This perspective is a nice lens for understanding how Riffle works, but we have found that it is not an especially useful one when actually building an app in our prototype framework.
+For now, our tools feel mostly like a set of unusual extensions to React, in large part because of the awkwardness of switching between SQL and JavaScript, neither of which is a compelling langauge for expressing these kinds of declarative, tree-structured queries.
+
+### Taking "everything is a query" even further
+
+Many modern app development frameworks adopt a sort of circular data flow: the UI is rendered as a pure function of some underlying state, and when the user performs some actions those trigger events, which cause cascading changes in the state and therefore the UI.
+Traditionally, there's a lot of work to propogate that change all the way through:
+1. Some kind of event manager needs to validate the event ("was it really safe to delete that playlist?") and apply it to the data.
+In a traditional web app, the event manager is the backend, but in a local-first architecture this is commonly done by a CRDT library such as Automerge.
+2. The app's business logic updates various pieces of derived state: for example, a playlist deletion would need to update the playlists shown in the sidebar, and possibly also update some metadata on the songs that were in that playlist.
+This would traditionally be done in either the model and controller of a Rails-style app, or in perhaps in imperative Javascript.
+3. The frontend needs to update the actual UI elements---and ultimately the pixels shown on the screen---in response to the changes in the business logic.
+In our example, we might need to switch back to some home screen if the deleted playlist was selected by the user.
+In many modern apps, this is done using a frontend framework like React or Svelte.
+
+[TK insert diagram]
+
+In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
+If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
+
+One could imagine pushing this "everything is a query" persepctive even further, though.
+Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
+We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's implementation of a text CRDT using Datalog.
+
+Taken to the extreme, we end up with a minimal model of an interactive app, where users take actions that are recorded in an event log, and then those actions cause changes in a UI described entirely by a declarative query.
+
+### What might compressing the stack into a query get us?
+
+While this is clean and elegant concept, there's a natural question of whether it actually leads to any progress in our quest to make app development simpler, faster, and more powerful.
+There are some benefits from _stack compression_, where what were previously a set of disparate technologies--event handling, data querying, and UI rendering--can be represented in a uniform way.
+However, we think that the primary benefit of this uniformity comes from the ability to more easily _reason across the layers of the stack_.
+
+For example, let's consider performance.
+User-facing apps face performance challenges that don't show up in other types of programs, especially when it comes to _latency_. Users are [exquisitely sensitive](TK link) to even small amounts of latency, and we believe that low latency is a key property of the types of creative tools that we're excited about.
+A key challenge in building performant apps is performing _incremental updates_: it's often much easier to describe how to build the UI from scratch than to figure out how it must update in response to a new event, but it's often too expensive to rebuild the UI from scratch every frame as in immediate-mode GUI tools.
+Indeed, a key lesson from React and other virtual DOM-based tools is finding a way to automatically transform a build-from-scratch description of the UI into an incremental one.
+
+In the past twenty years, researchers in the programming languages and database communities have developed various tools for automatically incrementalizing computation.
+Many of these techniques are attempts to solve the _incremental view maintenance_ problem for relational databases, where a view of the data is dynamically maintained as new writes occur.
+
+If the UI can be expressed in a way that is friendly to one of these automated incremental maintenance, perhaps as a declarative view of the data, we might be able to express user interfaces in a declarative, build-from-scratch way but obtain the perfromance benefits of incremental updates.
+
+While this seems like a purely technical benefit, we also believe that there are conceptual advantages to uniformity in the user interface stack.
+Many systems for incremental maintenance work by tracking data _provnenance_: they remember where a particular computation got its inputs, so that it knows when that computation needs to be re-run.
+We believe that understanding data provenance is also a fundamental tool in understanding app behaviour, for both app developers trying to debug the app and end users who are trying to extend it.
+
+Imagine a browser-style developer console that allows you to click on a UI element and see what component it was generated from. In a system with end-to-end provenance, we could identify how this element came to be in a much deeper way, answering questions not just questions like "what component template generated this element?" but "what query results caused that component to be included?" and even "what event caused those query results to look this way?".
+We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](TK link), where any piece of an app can be inspected to determine _why_ it's in that state.
+
+### Where we're going
+
+We started this project wondering how the local-first availability of an app's data could change and simplify app development.
+At this point, we're left with more questions than answers.
+However, we see the outline of an appraoch where _user interfaces are expressed as queries_, those queries are executed by a fast, performant incremental maintenance system, and that incremental maintenance gives us _detailed data provnenace_ throughout the system.
+Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
+We're excited by this potential, and even more excited by the possiblity that we might already have the basic technological pieces to make that vision a reality.
+
+If you'd like to follow our work, consider subscribing for udpates:
+We'd love your feedback: we're on Twitter and email.
+
 ## Related Work
 
 How is this different from?
