@@ -105,7 +105,7 @@ body {
     0.4626rem + 1.0309vw + var(--user-font-scale),
     1.125rem
   );
-  line-height: 1.5;
+  line-height: 1.35;
 }
 
 .wrapper {
@@ -300,4 +300,3 @@ blockquote .source {
   color: var(--color);
   font-size: 1rem;
 }
-
