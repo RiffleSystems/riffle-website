@@ -43,48 +43,87 @@ Could we take more integrated approaches to computing with data that make it eas
 
 Changing from a traditional web stack to a local-first architecture could have profound implications throughout the entire UI development stack; in the Riffle project, we're interested in exploring these implications in the broadest sense.
 
-Our approach is based on three observations.
+Our approach is based on three observations:
 
-First, we observe that a large part of the complexity of building an app comes from _managing and propogating state_; in some sense, state management is the main things that _makes an app an app_, an distinguishes app development from related tasks like data visualization.
+##### Managing state is hard.
 
-Second, it seems that having a rich, local state at hand, as one does in the local-first architecture, might make state management radically easier.
+Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
+In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
+In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embededded databases.
+In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
+
+##### Local-first allows rich access to state.
+
+In the local-first architecture, the entire app state is available locally with minimal latency. We think that this should make state management radically easier.
 If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates. Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
-Third, reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
+##### Databases have a lot of solutions to state problems.
+
+Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
 The power of client-side databases is already well-known—many complex desktop and mobile apps (e.g. Adobe Lightroom, Apple Photos and Google Chrome) use the SQLite embedded relational database to manage data.
-However, we think there are even greater opportunities to explore here—in particular, we see work on better query languages and fast incremental view maintenance as particular opportunities to apply ideas from database research to app development.
+We are especially interested in work on better query languages and fast incremental view maintenance, both of which have advanced considerably in recent years.
+However, many of these ideas are implemented only in high-end analytics products, or a system with high latency, or some other piece of technology that is unsuitable for app development.
+We think there are even greater opportunities to apply ideas from database research to app development.
 
 To start learning how these ideas might work in practice, we've built a prototype state management system: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into the opportunities and challenges in this space.
 
 ## Hypotheses
 
-Here are some of the specific ideas that we think could lead to powerful simplifications in building UIs.
+As we started our project, we had some specific ideas about how ideas from databases could dramatically simplify state management in GUI apps.
 
 ### Declarative queries clarify application structure
 
 Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 
-In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it would be possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
+We observe that in existing app architectures, a large amount of effort and code is expended on collecting and reshaping data.
+In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation: an app might first convert from SQL-style tuples to a Ruby object, then to a JSON HTTP-response, and then finally to a frontend Javascript object in the browser.
+Each of these transformations is performed separately, and there is often considerable developer effort in threading a new column all the way through these layers.
 
-We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code. Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be more widely used. [cite Actual Budget, Datascript?]
+In a local-first application, this doesn't need to be the case: all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it would be possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach, especially for complex operations like grouped aggregates.
 
-aside: As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
+<aside>
+As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
+</aside>
+
+We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code.
+Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
+Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
+
+This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be [more](https://github.com/tonsky/datascript) [widely](https://jlongster.com/future-sql-web) [used](https://tonsky.me/blog/the-web-after-tomorrow/).
 
 ### Fast reactive queries provide a clean mental model
 
-A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. This approach has been proven effective in many contexts—React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
+A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. This approach has been proven effective in many contexts—-React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
 In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated.
 
+<aside>
+<p>
+As we discussed our ideas with working app developers, we found that many people who work with databases in a web context has an intuition that <em>databases are slow</em>.
+For example, one developer thought that pulling down a few thousand rows in one query was going to be too slow, while another thought that queries are necessarily so slow that they must be run asychronously, rather than in the UI thread.
+</p>
+
+<p>
+This is striking because even primitive databases like SQLite are fast on modern hardware: many of the queries in our demo app run in a few hundred <em>microseconds</em> on a few-years-old laptop, much faster than even rudimentary DOM manipulations.
+<p>
+
+<p>
+We hypothesize three key sources of this mistaken intuition:
+</p>
+1. Developers are used to interacting with databases over the network, where network latencies apply. This might explain why they expect that all database operations should operate asynchronously.
+2. Developer intuitions about database performance were developed when hardware was much slower. Back in the days of spinning hard drives and 8 MB of RAM, a single disk seek could take many milliseconds. Modern hardware is astoundingly fast, and many more datasets fit into main memory even on mobile devices.
+3. Many relational database management systems aren't built for low latency. For example, many databases are built for analytics workloads on large data sets, where small amounts of latency are irrelevant to overall performance.
+</aside>
+
 One key observation about reactive systems is that making the reactive loop faster can qualitatively change the user experience. For example, a small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; even a few seconds of delay when propagating a change can create a different experience. We think the goal of a data management system should be to converge all queries to their new result within a single animation frame (16ms) after a write; this means that the developer doesn't need to worry as much about temporarily inconsistent loading states, and the user gets fast software.
 
-This performance budget may seem too ambitious, but there are reasons to believe it's achievable, especially if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under 1ms. Furthermore, re-running queries from scratch is the most naive way to achieve reactivity, but there's substantial research on incrementally maintaining relational queries (cite: Materialize, SQLive, Differential Datalog) which can dramatically reduce the overhead relative to re-running from scratch.
+This performance budget may seem too ambitious, but there are reasons to believe it's achievable, especially if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, re-running queries from scratch is the most naive way to achieve reactivity, but there's substantial research on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can dramatically reduce the overhead relative to re-running from scratch.
 
 ### Managing all state in one system provides greater flexibility
 
-Traditionally, ephemeral "UI state", e.g. local state in a React component, is treated as separate from "application state". One reason for this is performance characteristics—it would be impractical to have the hover-state of a button depend on a network roundtrip, or even blocking on a disk write. With a database so close at hand, this performance split doesn't necessarily need to exist.
+Traditionally, ephemeral "UI state", e.g. local state in a React component, is treated as separate from "application state". One reason for this is performance characteristics—it would be impractical to have the hover-state of a button depend on a network roundtrip, or even blocking on a disk write. With a fast database so close at hand, this performance split doesn't necessarily need to exist.
 
 What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach could help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
