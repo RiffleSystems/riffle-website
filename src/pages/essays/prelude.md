@@ -46,6 +46,7 @@ Changing from a traditional web stack to a local-first architecture could have p
 Our approach is based on three observations.
 
 First, we observe that a large part of the complexity of building an app comes from _managing and propogating state_; in some sense, state management is the main things that _makes an app an app_, an distinguishes app development from related tasks like data visualization.
+
 Second, it seems that having a rich, local state at hand, as one does in the local-first architecture, might make state management radically easier.
 If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates. Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
@@ -83,13 +84,11 @@ This performance budget may seem too ambitious, but there are reasons to believe
 
 ### Managing all state in one system provides greater flexibility
 
-- traditionally, big split btwn ephemeral UI state / persistent DB state. Why is this...? DB is slow.
-- Now DB is fast. Why not just combine it all?
-- Sample reasons:
-  - Reactive query system depends on UI state. Need to model it all in one system to make sense.
-  - Allow inspecting all state in one debugger.
-  - Allows easily persisting UI state.
-  - new gen of collaborative tools: requirements are getting murkier. Share cursor, share hover?? Of course, still need checkboxes for shared/persisted! It's just that it should be a light checkbox, not an entirely different system.
+Traditionally, ephemeral "UI state", e.g. local state in a React component, is treated as separate from "application state". One reason for this is performance characteristics—it would be impractical to have the hover-state of a button depend on a network roundtrip, or even blocking on a disk write. With a database so close at hand, this performance split doesn't necessarily need to exist.
+
+What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach could help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
+
+It would still be useful to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This configurability could have concrete benefits—for example, it's often useful to persist UI state, like the currently active tab in an app. Also, in modern real-time collaborative apps, UI state like cursor position or hover state is sometimes shared among clients. A unified approach to state could accommodate these kinds of changes without needing to move the UI state to an entirely separate "app state" database.
 
 ## Our prototype system
 
