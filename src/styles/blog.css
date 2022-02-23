@@ -300,3 +300,19 @@ blockquote .source {
   color: var(--color);
   font-size: 1rem;
 }
+
+/*
+Based on Gwern's analysis of the Tufte-CSS side note feature.
+https://www.gwern.net/Sidenotes#tufte-css
+*/
+aside {
+  float: right;
+  clear: right;
+  margin-right: -60%;
+  width: 50%;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  font-size: 80%;
+  vertical-align: baseline;
+  position: relative;
+}

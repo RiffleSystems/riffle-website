@@ -237,7 +237,6 @@ Importantly, this query doesn’t just execute once when the app boots. It’s a
 
 <aside>
 💡 In fact, our prototype actually uses the most naive possible approach to reactivity: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast in practice because our app doesn’t have many queries, and SQLite can run many common queries in under 1ms. In general, this is an instance of the problem of *incremental view maintenance [cite]* and we plan to explore far more efficient strategies for keeping these queries updated as the contents of the database change.
-
 </aside>
 
 Once the new results are ready, they’re passed on to the renderer. We currently use React for rendering, so it will use its usual strategy of rendering a new virtual DOM based on the new query results, and after diffing VDOMs, applying any necessary changes to the DOM.
