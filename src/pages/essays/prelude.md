@@ -2,6 +2,14 @@
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
 title: Simplifying the UI stack with local data
+authors:
+  -
+    - name: Geoffrey Litt
+      email: glitt@mit.edu
+    - name: Nicholas Schiefer
+      email: schiefer@mit.edu
+  - name: Daniel Jackson
+    email: dnj@csail.mit.edu
 publishDate: 28 Feb 2022
 draft: false
 description:

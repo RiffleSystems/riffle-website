@@ -1,18 +1,9 @@
 ---
 export interface Props {
-	name: string;
-	href: string;
+	author: {name: string, email: string, postSymbol?: string};
 }
 
-const { name, href } = Astro.props;
+const { name, email, postSymbol } = Astro.props.author;
 ---
 
-<div class="author">
-	<p><a {href}>{name}</a></p>
-</div>
-
-<style>
-	.author {
-		margin-bottom: 0.75rem;
-	}
-</style>
+<a href={"mailto:" + email}>{name}</a><sup>{postSymbol}</sup>
