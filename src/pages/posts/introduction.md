@@ -63,10 +63,11 @@ aside: As we'll discuss throughout this piece, SQL as a specific instantiation o
 
 ### Fast reactive queries provide a clean mental model
 
-It's broadly accepted that reactivity makes it easier to build applications without remembering to manually track dependencies and propagate updates. The benefits of this philosophy have been seen in systems ranging from spreadsheets to reactive UI libraries like React.js.
+Systems ranging from spreadsheets to React.js have shown us that *reactivity* makes it easier to build applications. It's easier to declare dependencies and have a computer automatically maintain them, than to manually track dependencies and propagate updates.
 
+- Familiar at the UI level. (note: React + Solid + Svelte different approaches?)
 - *db queries typically don't fit fully into a reactive model. even in a system like Meteor, lots of local caching + lag*
-- *If your queries evaluate incredibly quickly, this unlocks a qualitatively different model. Goal is effectively instant reactivity*
+- *If your queries evaluate incredibly quickly, this unlocks a qualitatively different model. Goal: converge to a consistent state one frame after a write*
 
 ---
 
@@ -82,8 +83,8 @@ Performance is a critical quality for a reactive UI system. If the system can gu
 
 - traditionally: big separation between ephemeral UI, persistent backend. made sense in an old school app.
 - new gen of collaborative tools: requirements are getting murkier. Share cursor, share hover??
-- Why not just combine it all? Simplifies things. Allow inspecting all state in one debugger, for example.
-- Of course, still need checkboxes for shared/persisted. It's just that it should be a light checkbox, not an entirely different system.
+- Why not just combine it all? Allow inspecting all state in one debugger. Allows easily persisting UI state. Simpler.
+- Of course, still need checkboxes for shared/persisted! It's just that it should be a light checkbox, not an entirely different system.
 
 - Part 4: **unified state**. If your client-side DB is so fast that it can re-execute all your reactive queries in 16ms, unlocks new possibilities. Just throw all your UI state in there, even local component state. Doesn't need to be persistent. Familiar benefits from "state management frameworks" in react. Having all your state managed in one system is simpler: eg, you can 1) use component state in your queries, 2) flexibly decide when to share UI state across users / persist UI state, 3) can see/edit all UI state in other tools that can access the DB
 
