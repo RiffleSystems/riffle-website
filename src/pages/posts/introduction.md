@@ -36,17 +36,26 @@ Here are some of the specific ideas that we think could lead to powerful simplif
 
 ### Declarative queries clarify application structure
 
-Most applications have some base state which has a canonical normalized representation to ensure data integrity. This base state must be further queried, denormalized, and reshaped before it can populate the user interface—for example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display. In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it's possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
+Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 
-We think that a good answer for many applications is to use a **relational model** to express queries within the client UI code. Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be more widely used. [cite Actual Budget?]
+In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it would be possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
+
+We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code. Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy without the application developer doing as much work. This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be more widely used. [cite Actual Budget?]
 
 aside: As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
 
 ### Fast reactive queries provide a clean mental model
 
+It's broadly accepted that reactivity makes it easier to build applications without remembering to manually track dependencies and propagate updates. The benefits of this philosophy have been seen in systems ranging from spreadsheets to reactive UI libraries like React.js.
+
+- *db queries typically don't fit fully into a reactive model. even in a system like Meteor, lots of local caching + lag*
+- *If your queries evaluate incredibly quickly, this unlocks a qualitatively different model. Goal is effectively instant reactivity*
+
+---
+
 Application developers are used to thinking of database queries as expensive operations that must be carefully managed because the database is across a slow network boundary. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
-In a local-first architecture, we can instead use a **reactive model**, where the developer registers reactive queries which automatically update whenever the relevant data changes. These kinds of reactive systems make it easier for developers to build applications without remembering to manually track dependencies and propagate updates, as shown by systems ranging from spreadsheets to reactive UI libraries like React and Svelte.
+In a local-first architecture, we can instead use a **reactive model**, where the developer registers reactive queries which automatically update whenever the relevant data changes.
 
 [todo: note that it's reactivity on the downstream queries not just the base state; also cite Pushpin / DFRP?]
 
@@ -54,7 +63,10 @@ Performance is a critical quality for a reactive UI system. If the system can gu
 
 ### Managing all state in one system provides greater flexibility
 
-
+- traditionally: big separation between ephemeral UI, persistent backend. made sense in an old school app.
+- new gen of collaborative tools: requirements are getting murkier. Share cursor, share hover??
+- Why not just combine it all? Simplifies things. Allow inspecting all state in one debugger, for example.
+- Of course, still need checkboxes for shared/persisted. It's just that it should be a light checkbox, not an entirely different system.
 
 - Part 4: **unified state**. If your client-side DB is so fast that it can re-execute all your reactive queries in 16ms, unlocks new possibilities. Just throw all your UI state in there, even local component state. Doesn't need to be persistent. Familiar benefits from "state management frameworks" in react. Having all your state managed in one system is simpler: eg, you can 1) use component state in your queries, 2) flexibly decide when to share UI state across users / persist UI state, 3) can see/edit all UI state in other tools that can access the DB
 
