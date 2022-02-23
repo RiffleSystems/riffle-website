@@ -7,30 +7,34 @@ draft: false
 description:
 ---
 
-Modern web applications are complicated to build and maintain because they have many layers of data representations spanning across the backend and frontend. For example, a "simple" todos app might have:
+Modern web applications are complicated to build and maintain because they have many layers of data representations spanning across the backend and frontend. For example, even a "simple" app might have:
 
-- A relational database queried with SQL, with tables like `todos` and `projects`
-- An ORM mapping the relational database to in-memory objects, manipulated in a server-side language like Ruby or Node.JS
-- A REST or GraphQL API describing this data in a serialized form, and allowing read/writes via HTTP requests
-- Objects in a rich client-side application, further manipulated in Javascript. For example, the UI might have a dropdown for filtering todos on the client.
+- a relational database, queried with SQL
+- an ORM mapping the relational database to in-memory objects, manipulated in a server-side language like Ruby or Node.JS
+- A REST or GraphQL API describing this data in a serialized form, manipulated via HTTP requests
+- Javascript objects in a rich client-side application, further manipulated in Javascript
 
 ![Draft image](../../../public/assets/blog/introduction/many-layers.png)
 
-While each layer can be justified in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app in this architecture requires thinking about SQL queries, ORM models, REST APIs, and Javascript objects. To reason about performance, developers must manually design caching and indexing strategies at every level of the stack.
+While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. These complexities make it harder for developers to get work done, and harder for beginners to get started.
 
-It seems that simplifying this stack and eliminating layers could make it dramatically easier to develop software, making developers more efficient and democratizing app development. How might we go about such a simplification?
+How might we simplify this stack?
 
-We think a promising foundation is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, and changes are synchronized between clients when a network connection is available. The client application can just read and write local data, and a state management framework can deal with the details of synchronizing data across devices. The application developer no longer needs to worry about sending API requests, caching, or optimistically applying local updates; many of the layers associated with a traditional backend no longer exist. In addition to benefits for developers, local-first software offers numerous benefits for end-users: for example, users have greater ownership and control over their own data, and an app can remain usable when the network is poor or nonexistent.
+We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling collaborative applications, including real-time collaboration if all clients are online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 
-There are tools that aim to help developers build local-first software, by using CRDTs to synchronize changes and converge across clients without needing a central server—examples include Automerge, Yjs, and Liveblocks. In one sense, these tools propose a dramatic architectural change, but in another sense, their scope is actually limited, since they're typically designed to integrate with familiar patterns and libraries for frontend UI web development (like React.js). Because most web UI technologies were developed in a very different context where data was assumed to live far away on a server, it's not obvious that these other parts of the UI development stack are still the best approach to building apps in this new context.
+It might seem that a local-first architecture would make applications *more complicated* rather than simpler—after all, in a traditional cloud architecture, supporting offline mode is seen as a challenging task that might involve adding client-side caching. However, given the right tools, we think that local-first applications can eventually be substantially *simpler* to build. If an application developer can rely on a generic state management layer, then their UI code can just read and write local data. The developer would no longer need to worry about synchronizing data, sending API requests, caching, or optimistically applying local updates; writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
-In the Riffle project, we're interested in exploring the broader implications of a local-first architecture for the full stack of UI development. How might we holistically rethink UI state management in a context where all the data is available locally? Can we design more integrated approaches that make it easier to build, maintain, and debug applications? Can we make apps more performant by default? Could we give end users more power to customize and compose the software they use every day? In this essay, we describe some of specific approaches we find promising, and describe our learnings from building an initial prototype.
+We think this architecture could have profound implications throughout the entire UI development stack. Most client-side web UI technologies have been developed in a context where data is assumed to live far away on a server; now the data can be immediately close at hand on the client device.  In the Riffle project, we are interested in exploring: how might this architecture allow us to build simpler apps? Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Perhaps simpler local-first apps would even be more customizable and composable by end users.
 
-## Approaches
+*todo: workshop this To some extent, this might involve drawing on existing techniques used for desktop and mobile applications, which often work more with local data than web apps do. However, we're also interested in going farther than that... use the latest DB research...?*
 
-Here are a few opportunities we see for approaching client-side UI development differently given a local-first architecture.
+To learn more about how these ideas might work in practice, we've built a prototype state management system: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. It's far from a usable product, but building real apps using the prototype has already yielded some insight into the shape of the challenge, which we describe in this essay.
 
-### Client-side relational queries
+## Hypotheses
+
+What are the specific directions that a local-first architecture might unlock for simplifying applications? Here are some of our hunches.
+
+### Declarative queries clarify application structure
 
 Most applications have some base state which has a canonical normalized representation to ensure data integrity. This base state must be further queried, denormalized, and reshaped before it can populate the user interface—for example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display. In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation. But in a local-first application, this doesn't need to be the case—all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it's possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach.
 
@@ -38,7 +42,7 @@ We think that a good answer for many applications is to use a **relational model
 
 aside: As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
 
-### Pervasive, fast reactivity
+### Fast reactive queries provide a clean mental model
 
 Application developers are used to thinking of database queries as expensive operations that must be carefully managed because the database is across a slow network boundary. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
@@ -48,7 +52,7 @@ In a local-first architecture, we can instead use a **reactive model**, where th
 
 Performance is a critical quality for a reactive UI system. If the system can guarantee that updates happen very quickly even as the application and its data grow complex, this simplifies the mental model for both the developer and the user, because there's less of a need to worry about stale data or in-progress asynchronous updates. Pairing reactivity with the relational model has promising performance characteristics. First, the database community has spent considerable effort making it fast to execute relational queries, so even a naive reactive strategy of re-running queries from scratch (which we use in our current prototype) can be very fast. Even better, there's also research on incrementally maintaining relational queries (cite: Materialize, SQLive, Differential Datalog) which substantially reduces the overhead relative to re-running from scratch.
 
-### Unified state management
+### Managing all state in one system provides greater flexibility
 
 
 
