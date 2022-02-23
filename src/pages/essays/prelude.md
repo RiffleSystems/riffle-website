@@ -35,9 +35,9 @@ However, we think that the local-first architecture offers opportunities to make
 A large amount of effort in a traditional, cloud-oriented app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
 
 Most client-side web UI technologies have been developed in a context where data is assumed to live far away on a server; now the data can be immediately close at hand on the client device. This feels like it could be huge _advantage_ for simplifying app development.
-One early glimpse of this potential comes from general-purpose CRDT libraries like [Automerge](https://github.com/automerge/automerge) and [Yjs](https://github.com/yjs/yjs), which alleviate some of the complexity of building collaborative applications by providing a local, writable store and automatically managing synchronization between users, without the additional complexity of a rich backend.
+This idea is not novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to autoamtically synchronize their state between users.
 
-Despite these promising developments, local-first apps are mostly written using the same tools and paradigms as standard cloud-based ones.
+However, we believe that the local-first architecture offers even more opportunities for simplifying app development.
 If an application developer can rely on the data being so  close at hand, might there be a simpler way to write apps?
 Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
 
