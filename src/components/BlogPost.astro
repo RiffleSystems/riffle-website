@@ -29,7 +29,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
         )}
         <p class="publish-date">{publishDate}</p>
         <h1 class="title">{title}</h1>
-        <AuthorList client:load {authors} />
+        <AuthorList {authors} />
       </header>
       <main>
         <slot />

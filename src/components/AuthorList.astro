@@ -26,5 +26,5 @@ console.log(flattenedAuthors)
 <div class="authors">
     {flattenedAuthors.slice(0, -1).map(author => <span><Author {author} />, </span>)}
     and
-    <Author author={flattenedAuthors.slice(-1)[0]} />
+    <span><Author author={flattenedAuthors.slice(-1)[0]} /></span>
 </div>
