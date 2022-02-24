@@ -204,17 +204,11 @@ select
 from tracks
   left outer join albums on tracks.album_id = albums.id
 ```
+<aside>
+One downside of SQL here is that the join syntax is verbose; in a language like GraphQL we could traverse this association more compactly.
+</aside>
 
-We’ve already seen a key benefit of the relational model: SQL has made it natural to express joins across tables in a declarative way, without specifying a join algorithm. On the other hand, the syntax is verbose; in a language like GraphQL we could traverse this association more compactly:
-
-```graphql
-tracks {
-	name
-	albums {
-		name
-	}
-}
-```
+We’ve already seen a key benefit of the relational model: SQL has made it natural to express joins across tables in a declarative way, without specifying a join algorithm.
 
 Next, we need to add the third column: the list of artists for each track. We can do this within the SQL query by using a subquery which loads the artists for each track by joining through the `tracks_artists` table, and then applies a `group_concat` aggregation operator to concatenate the artist names together with commas:
 
@@ -250,23 +244,23 @@ from tracks
 const tracksQuery = db.query(() => tracksQueryString)
 
 const TrackList = () => {
-	**// Subscribe to reactive query
-	const tracks = useQuery(tracksQuery)**
+  // Subscribe to reactive query
+  const tracks = useQuery(tracksQuery)
 
-	return <table>
-		<thead>
-			<th>Name></th>
-			<th>Album></th>
-			<th>Artists</th>
-		</thead>
-		<tbody>
-			{tracks.map(track => <tr>
-				<td>{track.name}</td>
-				<td>{track.album_name}</td>
-				<td>{track.concatenated_artists}</td>
-			</tr>)}
-		</tbody>
-	</table>
+  return <table>
+    <thead>
+      <th>Name></th>
+      <th>Album></th>
+      <th>Artists</th>
+    </thead>
+    <tbody>
+      {tracks.map(track => <tr>
+        <td>{track.name}</td>
+        <td>{track.album_name}</td>
+        <td>{track.concatenated_artists}</td>
+      </tr>)}
+    </tbody>
+  </table>
 }
 ```
 
@@ -328,16 +322,16 @@ const TrackListSchema = {
 }
 
 const TrackList = () => {
-	**const [state, set] = useComponentState(TrackListSchema, { key: Singleton })**
-	const tracks = useQuery(tracksQuery)
+  const [state, set] = useComponentState(TrackListSchema, { key: Singleton })
+  const tracks = useQuery(tracksQuery)
 
-	return <table>
-		<thead>
-			**<th onClick={set.sortProperty("name")}>Name></th>
-			<th onClick={set.sortProperty("album_name")}>Album></th>
-			<th onClick={set.sortProperty("artists")}>Artists</th>**
-		</thead>
-	...
+  return <table>
+    <thead>
+      <th onClick={set.sortProperty("name")}>Name></th>
+      <th onClick={set.sortProperty("album_name")}>Album></th>
+      <th onClick={set.sortProperty("artists")}>Artists</th>
+    </thead>
+  //...
 }
 ```
 
@@ -351,7 +345,7 @@ select
 	...
 from tracks
   left outer join albums on tracks.album_id = albums.id
-**order by ${state.sortProperty()} ${state.sortOrder()}**
+  order by ${state.sortProperty()} ${state.sortOrder()}
 `)
 ```
 

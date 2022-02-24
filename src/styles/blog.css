@@ -3,7 +3,7 @@
     Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
   --font-sans: "Inter", var(--font-fallback-sans);
   --font-serif: "PT Serif", serif;
-  --font-mono: "IBM Plex Mono", Consolas, "Andale Mono WT", "Andale Mono",
+  --font-mono: "Source Code Pro", Consolas, "Andale Mono WT", "Andale Mono",
     "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono",
     "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco,
     "Courier New", Courier, monospace;

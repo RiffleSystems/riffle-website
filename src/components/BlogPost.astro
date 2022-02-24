@@ -1,16 +1,17 @@
 ---
-import AuthorList from "./AuthorList.astro"
+import AuthorList from "./AuthorList.astro";
 
 export interface Props {
   title: string;
-  authors: [{name: string, email: string} | [{name: string, email: string}]];
+  authors: [
+    { name: string; email: string } | [{ name: string; email: string }]
+  ];
   publishDate: string;
   heroImage: string;
   alt: string;
 }
 
 const { title, authors, publishDate, heroImage, alt } = Astro.props;
-
 ---
 
 <div class="layout">
@@ -76,6 +77,18 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     margin-bottom: -0.5rem;
     font-weight: bold;
     font-size: 1.25rem;
+  }
+
+  .content :global(table) {
+    font-family: var(--font-sans);
+    background: white;
+    border-collapse: collapse;
+  }
+
+  .content :global(td),
+  .content :global(th) {
+    border: solid thin var(--color-gray-300);
+    padding: 3px 6px;
   }
 
   header {
