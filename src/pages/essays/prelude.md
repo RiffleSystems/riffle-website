@@ -212,8 +212,8 @@ const TrackList = () => {
 
   return <table>
     <thead>
-      <th>Name></th>
-      <th>Album></th>
+      <th>Name</th>
+      <th>Album</th>
       <th>Artists</th>
     </thead>
     <tbody>
@@ -260,7 +260,7 @@ In our example scenario, our app is simple enough so far that we only need to ma
 In our code, we can use Riffle's `useComponentState` hook to access getter and setter functions to manipulate the state. This hook resembles React's `useState` hook but is implemented in terms of simple database queries. The getters are reactive queries that incorporate the key for this component instance; the setters are syntax sugar for update statements which also incorporate the component key.
 
 ```jsx
-import Singleton from '../component'
+import { db, useComponentState } from 'riffle'
 
 const TrackListSchema = {
   componentType: "TrackList",
