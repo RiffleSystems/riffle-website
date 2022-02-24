@@ -1,7 +1,7 @@
 ---
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
-title: Simplifying the UI stack with local data
+title: Simpler UI development with a client-side database
 authors:
   -
     - name: Geoffrey Litt
@@ -552,24 +552,6 @@ Nonetheless, SQL was a consistent thorn in our side during this project. The def
 We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. However, we think that SQL is mostly not a good fit for a general relational language for building apps.
 
 - [ ]  Talk about the alternative history?
-- **The structure of reactive declarative queries makes it easier to understand a system**
-    - structured model enables a clean debugging experience like a spreadsheet
-    - Synchronous update model is nice to reason about. But:
-        - perf is a big question. SQLite is often pretty fast but not always. And working in the browser async loop + with React rendering introduces further challenges.
-        - There are tricky cases it doesn’t handle: long-running async network requests, animations between states. Similar to the challenges that React.js has to deal w/.
-- **Viewing/editing data in a generic DB tool is very convenient for debugging.**
-    - really nice to just see/edit the UI state.
-    - Also points towards interoperability/scripting.
-- **SQL is great in some ways, very limited in others.**
-    - SQL is powerful! Relational model is great. If you already know SQL, it’s nice and familiar.
-    - But SQL has major drawbacks:
-        - No nested results, huge problem for UIs
-        - verbose syntax
-        - weird scalar language
-    - Our meta-query language is currently SQL + string interpolation, which is clearly terrible. Very easy to get wrong, sometimes hard to read.
-    - Also mention we’ve tried some GraphQL experiments...
-- **Persistent UI state by default is a nice bonus.**
-- *todo: fill out more findings*
 
 ## Towards a reactive, relational approach to state management
 
