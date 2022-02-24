@@ -22,7 +22,7 @@ Modern web applications are complicated to build and maintain because they have 
 - A REST or GraphQL API describing this data in a serialized form, manipulated via HTTP requests
 - Javascript objects in a rich client-side application, further manipulated in Javascript
 
-![Draft image](/assets/blog/prelude/many-layers.png)
+![](/assets/blog/prelude/layers.png)
 
 While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. The result is that app development is a specialized, highly technical skill set: even many skilled programmers find it impossible to build simple user interfaces, and even advanced developers sometimes struggle to build performant, reliable apps.
 
@@ -67,6 +67,8 @@ As we started our project, we had some specific ideas about how ideas from datab
 
 ### Declarative queries clarify application structure
 
+![](/assets/blog/prelude/declarative.png)
+
 Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 
 We observe that in existing app architectures, a large amount of effort and code is expended on collecting and reshaping data.
@@ -86,6 +88,8 @@ Declarative queries express intent more concisely than imperative code, and allo
 This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be [more](https://github.com/tonsky/datascript) [widely](https://jlongster.com/future-sql-web) [used](https://tonsky.me/blog/the-web-after-tomorrow/).
 
 ### Fast reactive queries provide a clean mental model
+
+![](/assets/blog/prelude/reactive.png)
 
 A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. This approach has been proven effective in many contexts—-React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
@@ -116,6 +120,8 @@ One key observation about reactive systems is that making the reactive loop fast
 This performance budget may seem too ambitious, but there are reasons to believe it's achievable, especially if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, re-running queries from scratch is the most naive way to achieve reactivity, but there's substantial research on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can dramatically reduce the overhead relative to re-running from scratch.
 
 ### Managing all state in one system provides greater flexibility
+
+![](/assets/blog/prelude/unified.png)
 
 Traditionally, ephemeral "UI state", e.g. local state in a React component, is treated as separate from "application state". One reason for this is performance characteristics—it would be impractical to have the hover-state of a button depend on a network roundtrip, or even blocking on a disk write. With a fast database so close at hand, this performance split doesn't necessarily need to exist.
 
