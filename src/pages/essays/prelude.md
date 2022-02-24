@@ -127,9 +127,11 @@ Traditionally, ephemeral "UI state", e.g. local state in a React component, is t
 
 What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach could help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
-It would still be useful to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This configurability could have concrete benefits—for example, it's often useful to persist UI state, like the currently active tab in an app. Also, in modern real-time collaborative apps, UI state like cursor position or hover state is sometimes shared among clients. A unified approach to state could accommodate these kinds of changes without needing to move the UI state to an entirely separate "app state" database.
+It would still be useful to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This configurability could have concrete benefits—for example, it's often useful to persist UI state, like the currently active tab in an app. Also, in modern real-time collaborative apps, UI state like cursor position or hover state is sometimes shared among clients. A unified approach to state could accommodate these kinds of changes more easily.
 
 ## Our prototype system
+
+
 
 - *Goal: prototype the experience of building an app in this style, learn about the problem*
 - *important: this is not the final thing! and it's nowhere close to a product*
@@ -147,11 +149,11 @@ Our music collection is a very natural fit for a relational schema containing se
 
 **tracks**
 
-| id | name | album_id |
-| --- | --- | --- |
-| 1 | If I Ain’t Got You | 11 |
-| 2 | Started From the Bottom | 12 |
-| 3 | Love Never Felt So Good | 13 |
+| id | name | album_id | artist_id
+| --- | --- | --- | --- |
+| 1 | If I Ain’t Got You | 11 | 21
+| 2 | Started From the Bottom | 12 | 22
+| 3 | Love Never Felt So Good | 13 | 23
 
 **albums**
 
@@ -161,8 +163,6 @@ Our music collection is a very natural fit for a relational schema containing se
 | 12 | Nothing Was The Same |
 | 13 | XSCAPE |
 
-We also have artists in our database. A track can be associated with multiple artists through a join table, since artists can collaborate on a track:
-
 **artists**
 
 | id | name |
@@ -170,74 +170,45 @@ We also have artists in our database. A track can be associated with multiple ar
 | 21 | Alicia Keys |
 | 22 | Drake |
 | 23 | Michael Jackson |
-| 24 | Justin Timberlake |
-
-**tracks_artists**
-
-| track_id | artist_id |
-| --- | --- |
-| 1 | 21 |
-| 2 | 22 |
-| 3 | 23 |
-| 3 | 24 |
-
-Because Riffle is built around the SQLite embedded relational database, we can model these as familiar SQLite tables. Currently this is done using a very primitive schema definition in Javascript; a nicer approach to defining schemas and particularly migrations remains an open question.
-
-Relational modeling takes a bit of practice to learn, and is sometimes considered more up-front work than modeling data in a more flexible document structure. However, many developers are already familiar with this skillset in the context of backend data modeling, and recently the relational model seems to be regaining favor as developers realize the benefits of normalized and structured data.
 
 ### Showing a list of tracks
 
-In our app, we’d like to show a list view like this, where each track has a single row showing its album name and the names of its artists.
+In our app, we’d like to show a list view, where each track has a single row showing its album and artist name.
 
-| Name | Album | Artists |
+| Name | Album | Artist |
 | --- | --- | --- |
 | If I Ain’t Got You | The Diary of Alicia Keys | Alicia Keys |
 | Started From the Bottom | Nothing Was The Same | Drake |
-| Love Never Felt So Good | XSCAPE | Michael Jackson, Justin Timberlake |
+| Love Never Felt So Good | XSCAPE | Michael Jackson |
 
-Using SQL, it’s straightforward to load the name for each track, and to load the name of its album using a join:
+Using SQL, it’s straightforward to load the name for each track, and to load the name of its album and artist. We can do this declaratively, specifying the tables to join separately from any particular join strategy.
 
 ```sql
 select
   tracks.name as name,
   albums.name as album_name
+  artists.name as album_name
 from tracks
   left outer join albums on tracks.album_id = albums.id
+  left outer join artists on tracks.artist_id = artists.id
 ```
 <aside>
 One downside of SQL here is that the join syntax is verbose; in a language like GraphQL we could traverse this association more compactly.
 </aside>
 
-We’ve already seen a key benefit of the relational model: SQL has made it natural to express joins across tables in a declarative way, without specifying a join algorithm.
-
-Next, we need to add the third column: the list of artists for each track. We can do this within the SQL query by using a subquery which loads the artists for each track by joining through the `tracks_artists` table, and then applies a `group_concat` aggregation operator to concatenate the artist names together with commas:
-
-```sql
-select
-  tracks.name as name,
-  albums.name as album_name,
-
-	-- subquery that concatenates artist names into a string
-  (
-    select group_concat(artists.name, ', ') from tracks_artists
-    join artists on tracks_artists.artist_id = artists.id
-    where tracks_artists.track_id = tracks.id
-  ) as concatenated_artists
-from tracks
-  left outer join albums on tracks.album_id = albums.id
-```
-
-Doing this computation inside a SQL query might seem like it improperly mixes concerns between data reshaping and view templating. However, in Riffle the idea is to push all data manipulation down into relational queries as much as possible. As we’ll discuss more later, this has important implications for unifying data management and efficiently computing the view.
-
-Once we’ve written this query, we’ve already done most of the work for showing this particular UI! We can simply extract the results and use a JSX template in a React component to render the data:
+Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data:
 
 ```jsx
+import { db, useQuery } from 'riffle'
+
 const tracksQueryString = sql`
-select
-  tracks.name as name,
-	...
-from tracks
-  left outer join albums on tracks.album_id = albums.id
+  select
+    tracks.name as name,
+    albums.name as album_name
+    artists.name as album_name
+  from tracks
+    left outer join albums on tracks.album_id = albums.id
+    left outer join artists on tracks.artist_id = artists.id
 `
 
 // use hardcoded SQL string for our query
@@ -266,39 +237,25 @@ const TrackList = () => {
 
 *todo: screenshot of a list of tracks*
 
-Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**—any time the relevant contents of the database change, the query will automatically be re-run, and will notify this component that it needs to re-render. In this case, the query depends on the entire contents of the tracks, albums, and artists tables, so any changes to those tables should result in showing the user an updated table.
-
 <aside>
-💡 In fact, our prototype actually uses the most naive possible approach to reactivity: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast in practice because our app doesn’t have many queries, and SQLite can run many common queries in under 1ms. In general, this is an instance of the problem of *incremental view maintenance [cite]* and we plan to explore far more efficient strategies for keeping these queries updated as the contents of the database change.
+Our prototype implements the most naive reactivity approach: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast because SQLite can run many common queries very fast. In general, this is an instance of the problem of incremental view maintenance [cite] and we plan to explore far more efficient strategies for keeping these queries updated.
 </aside>
 
-Once the new results are ready, they’re passed on to the renderer. We currently use React for rendering, so it will use its usual strategy of rendering a new virtual DOM based on the new query results, and after diffing VDOMs, applying any necessary changes to the DOM.
+Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
+
+**todo: add animated screenshot?**
 
 ### Sorting tracks
 
-So far, our application looks pretty boring—our music collection doesn’t change very often, so it looks like it’s just rendering a static dataset. Let’s add some more interactive functionality by making the table sortable when the user clicks on the column headers.
+Next, let's add some interactive functionality by making the table sortable when the user clicks on the column headers. The current sort property and direction represents a new piece of *state* that needs to be managed in our application. A typical React solution might be to introduce some local component state with the `useState` hook. But the idiomatic Riffle solution is to avoid React state, and instead to store the UI state in the database.
 
-The current sort property and direction represents a new piece of *state* that needs to be managed in our application. A typical solution in React might be to introduce some local component state, and then sort the list of tracks by that property in Javascript:
-
-```jsx
-import sortBy from 'lodash'
-
-const TrackList = () => {
-	const [sortProperty, setSortProperty] = useState("name")
-	const tracks = useQuery(tracksQuery)
-	const sortedTracks = sortBy(tracks, sortProperty)
-
-	// ...
-}
-```
-
-The idiomatic solution in Riffle looks quite different—because all UI state is managed in the database, we need to store the sort property state in the database. Riffle provides a mechanism for storing local state associated with UI components. Each type of component gets a relational table, with a schema that defines the local state for that component. Each row of the table is associated with a specific instance of the component, identified by a unique ID called the *component key.*
+Our prototype has a mechanism for storing local state associated with UI components. Each type of component gets a relational table, with a schema that defines the local state for that component. Each row of the table is associated with a specific instance of the component, identified by a unique ID called the *component key.*
 
 How are component instance IDs chosen? An app developer can choose from several strategies:
 
 - **Ephemeral**: every time React mounts a new component instance, generate a fresh random ID. This replicates the familiar behavior of React’s local state. Once a component unmounts, we can safely garbage collect its state from the table.
-- **Singleton:** always assign the same ID to every instance, so that the table only has one row. All instances of the component will share state.
-- **Custom**: The developer can choose a custom key as a middle ground between these two approaches. For example, a track list might be identified by the playlist it’s displaying. Then, a user could toggle back and forth between viewing two different track lists, while preserving the sort state within each list separately.
+- **Singleton:** always assign the same ID, so that the table only has one row. This is useful for a global `App` component, or any situation where we want all instances of the component type to share state.
+- **Custom**: The developer can choose a custom key to identify a component across mounts. For example, a track list might be identified by the playlist it’s displaying. Then, a user could toggle back and forth between viewing two different track lists, while preserving the sort state within each list separately.
 
 In our example scenario, our app is simple enough so far that we only need to manage state for a single global track list; we can use the singleton strategy and keep the table limited to a single row. The table will look like this:
 
@@ -308,7 +265,7 @@ In our example scenario, our app is simple enough so far that we only need to ma
 | --- | --- | --- |
 | SINGLETON | name | asc |
 
-In our code, we can use the `useComponentState` hook to access getter and setter functions to manipulate the state, which feels fairly similar to React. However, under the hood, this is implemented in terms of simple database queries. The getters are simply reactive queries that incorporate the key for this component instance; the setters are syntax sugar for update statements which also incorporate the component key.
+In our code, we can use Riffle's `useComponentState` hook to access getter and setter functions to manipulate the state. This hook resembles React's `useState` hook but is implemented in terms of simple database queries. The getters are reactive queries that incorporate the key for this component instance; the setters are syntax sugar for update statements which also incorporate the component key.
 
 ```jsx
 import Singleton from '../component'
@@ -335,17 +292,17 @@ const TrackList = () => {
 }
 ```
 
-Next, we need to actually use this state in our query. We can use string interpolation to dynamically change the query depending on the sorting state:
+Next, we need to actually use this state to sort the tracks. We can interpolate the sort property and sort order into the SQL query that fetches the tracks. The function that generates our SQL query can use a `get` operator to read other reactive values.
 
 ```jsx
 // Define SQL query for tracks list
-const tracksQuery = db.query(() => sql`
+const tracksQuery = db.query((get) => sql`
 select
   tracks.name as name,
 	...
 from tracks
   left outer join albums on tracks.album_id = albums.id
-  order by ${state.sortProperty()} ${state.sortOrder()}
+  order by ${get(state.sortProperty)} ${get(state.sortOrder)}
 `)
 ```
 
@@ -353,23 +310,15 @@ This establishes a new reactive dependency. Up until now, the query string was h
 
 ![IMG_0551.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ef54c6f9-90e1-43c5-bfab-81cf1ac9d7f8/IMG_0551.jpg)
 
-<aside>
-💡 By using function calls to access dependent state within query strings, we can automatically track dependencies between queries using a global stack; this is a trick used by SolidJS, Adapton, and other reactive systems.
-
-</aside>
-
 Now when we click the table headers, we see the table reactively update!
 
 *Video: show table headers sorting*
 
 What have we gained by taking the Riffle approach here?
 
-- We have structured dataflow ****that makes it easier to **understand the provenance** of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
-    - *todo: debugger screenshot / demo*
+- We have structured dataflow that makes it easier to **understand the provenance** of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
 - We can achieve more **efficient execution** by pushing computations down into a database. For example, we can maintain indexes in a database to avoid the need to sort data in our application or manually maintain ad hoc indexes in our app code.
 - UI state is **persistent by default**. It’s often convenient for end-users to have state like sort order or scroll position persisted, but it takes active work for app developers to add these kinds of features. In Riffle, persistence comes for free, although local and ephemeral state are still easily achievable by setting up component keys accordingly.
-
-This last benefit points to the deeper principle of *universal* state management. By handling “app state” and “UI state” in a single tool, we can avoid drawing a strong distinction between the two categories. For example, some realtime collaborative apps break the traditional assumption that UI state is device-local by sharing things like cursor position or menu state across clients. We believe sharing UI state should be a simple matter of changing some settings on a state object, not migrating state to a totally different data management system.
 
 ### Search
 
@@ -393,12 +342,12 @@ We can then connect an input element to this new piece of state in the database.
 Next, we need to wire up the search box to actually filter the list of tracks. SQLite has an [extension](https://www.sqlite.org/fts5.html) that we can use to create a full text index over our tracks table; we’ll call our index `tracks_full_text`. Then we can rewrite our query to use this index to filter the query based on the current search term in the search box:
 
 ```jsx
-const filteredTracks = db.query(() => {
+const filteredTracks = db.query((get) => {
 	let query = sql`select * from tracks_full_text`
 
 	// If search term is present, filter using full text index
 	if(state.searchTerm() !== "") {
-		query = sql`${query} where tracks_full_text match "${state.searchTerm()}*"`
+		query = sql`${query} where tracks_full_text match "${get(state.searchTerm)}*"`
 	}
 	return query
 })
