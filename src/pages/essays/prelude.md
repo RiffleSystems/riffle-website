@@ -45,21 +45,15 @@ Changing from a traditional web stack to a local-first architecture could have p
 
 Our approach is based on three observations:
 
-##### Managing state is hard.
-
-Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
+**Managing state is hard.** Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
 In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
 In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embededded databases.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 
-##### Local-first allows rich access to state.
-
-In the local-first architecture, the entire app state is available locally with minimal latency. We think that this should make state management radically easier.
+**Local-first allows rich access to state.** In the local-first architecture, the entire app state is available locally with minimal latency. We think that this should make state management radically easier.
 If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates. Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
-##### Databases have a lot of solutions to state problems.
-
-Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
+**Databases have many solutions to state problems.** Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
 The power of client-side databases is already well-known—many complex desktop and mobile apps (e.g. Adobe Lightroom, Apple Photos and Google Chrome) use the SQLite embedded relational database to manage data.
 We are especially interested in work on better query languages and fast incremental view maintenance, both of which have advanced considerably in recent years.
 However, many of these ideas are implemented only in high-end analytics products, or a system with high latency, or some other piece of technology that is unsuitable for app development.
