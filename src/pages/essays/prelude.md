@@ -332,9 +332,9 @@ Next, let’s add a search box where the user can type to filter the list of tra
 
 ```jsx
 <input
-	type="text"
-	value={state.searchTerm}
-	onChange={(e) => set.searchTerm(e.target.value)} />
+  type="text"
+  value={state.searchTerm}
+  onChange={(e) => set.searchTerm(e.target.value)} />
 ```
 
 We can then connect an input element to this new piece of state in the database. We use a standard React *controlled input*, which treats the input element as a stateless view of our app state rather than an inherently stateful DOM element.
@@ -343,13 +343,13 @@ Next, we need to wire up the search box to actually filter the list of tracks. S
 
 ```jsx
 const filteredTracks = db.query((get) => {
-	let query = sql`select * from tracks_full_text`
+  let query = sql`select * from tracks_full_text`
 
-	// If search term is present, filter using full text index
-	if(state.searchTerm() !== "") {
-		query = sql`${query} where tracks_full_text match "${get(state.searchTerm)}*"`
-	}
-	return query
+  // If search term is present, filter using full text index
+  if(state.searchTerm() !== "") {
+    query = sql`${query} where tracks_full_text match "${get(state.searchTerm)}*"`
+  }
+  return query
 })
 ```
 
@@ -363,9 +363,7 @@ Now, when the user types into the search box, their search term appears and filt
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
-It may seem unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes much easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet.
-
-Because all the data is available on the local client without network latency in our architecture, the theoretical ceiling on performance is high. We can also tune the database so that it doesn’t need to persist to disk before confirming a write, which is a reasonable level of durability in this context. In our experience so far, SQLite can run many queries fast enough to make this approach work, although we still need to develop more asynchronous approaches for handling slow queries.
+It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run many queries fast enough to make this approach work, although we still plan to develop more asynchronous approaches for handling slower queries.
 
 ### Virtualized list rendering
 
@@ -406,10 +404,7 @@ const filteredPagedTracks = db.query(() => {
 },
 ```
 
-This introduces yet another layer to our reactive query graph. Once again, by explicitly representing all these dependencies in Riffle, we gain two key advantages:
-
-- The runtime can efficiently schedule incremental updates through the graph.
-- The user can inspect and understand the structure of the computation.
+This introduces yet another layer to our reactive query graph. Once again, by explicitly representing all these dependencies in Riffle, we gain two key advantages: the runtime can efficiently schedule incremental updates through the graph, and the user can inspect and understand the structure of the computation.
 
 ![IMG_0549.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e9aaf1be-36a9-49e6-b3de-2369f7c5e1fb/IMG_0549.jpg)
 
