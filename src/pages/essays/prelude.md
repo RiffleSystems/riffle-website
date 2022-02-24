@@ -22,7 +22,7 @@ Modern web applications are complicated to build and maintain because they have 
 - A REST or GraphQL API describing this data in a serialized form, manipulated via HTTP requests
 - Javascript objects in a rich client-side application, further manipulated in Javascript
 
-![Draft image](../../../public/assets/blog/introduction/many-layers.png)
+![Draft image](/assets/blog/prelude/many-layers.png)
 
 While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. The result is that app development is a specialized, highly technical skill set: even many skilled programmers find it impossible to build simple user interfaces, and even advanced developers sometimes struggle to build performant, reliable apps.
 
@@ -140,8 +140,6 @@ It would still be useful to configure state along various dimensions: persistenc
 - Our prototype: reactive graph around SQLite, + React hooks. Let's see by example.
 
 In this section, we’ll concretely demonstrate our prototype system by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
-
-![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ae4eb571-6c53-401c-b6fd-a57457b9a866/Untitled.png)
 
 ### Schema
 
@@ -308,7 +306,7 @@ from tracks
 
 This establishes a new reactive dependency. Up until now, the query string was hardcoded, and it would only reactively update when the database contents changed. Now, the query string itself depends on the local component state. Riffle’s reactivity system ensures that queries run in a correct dependency order—if the sort property changes, the query for that property must run before its result can be used in the tracks query.
 
-![IMG_0551.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/ef54c6f9-90e1-43c5-bfab-81cf1ac9d7f8/IMG_0551.jpg)
+![](/assets/blog/prelude/reactive-queries-1.jpeg)
 
 Now when we click the table headers, we see the table reactively update!
 
@@ -355,7 +353,7 @@ const filteredTracks = db.query((get) => {
 
 Revisiting our graph of dependent queries, there’s now a new layer:
 
-![IMG_0550.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/2c6d40f2-21a0-4de3-b12b-734e2bb8d1b7/IMG_0550.jpg)
+![](/assets/blog/prelude/reactive-queries-2.jpeg)
 
 Now, when the user types into the search box, their search term appears and filters the list of tracks:
 
