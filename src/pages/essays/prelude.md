@@ -456,11 +456,9 @@ In our prototype, we found dramatic benefits to turning this paradigm on its hea
 
 First, we found it very decouple read- and write-paths: the source application can write the data in a convenient format, while the target application can query it to obtain data in a different convenient format. Often, the most convenient write path is an event log, but consuming an event log is quite difficult for other apps.
 
-Second, verb-based APIs create an unfortunate n-to-n problem: every app needs to know how to call the APIs of every other app. In contrast, data-based interoperability can use the shared data directly: once an app knows how to read a data format, it can read that data regardless of which app produced it.
+Second, <a href="https://twitter.com/andy_matuschak/status/1452438198668328960">verb-based APIs create an unfortunate n-to-n problem</a>: every app needs to know how to call the APIs of every other app. In contrast, data-based interoperability can use the shared data directly: once an app knows how to read a data format, it can read that data regardless of which app produced it.
 
 Third, we found that treating the data format as a core interface for an app solves many problems that are plague modern apps. Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
-
-[ ]  Link to Andy’s tweet about n-to-n problems in APIs?
 
 ### The difference between “UI data” and “domain data” is quantitative, not qualitative.
 
