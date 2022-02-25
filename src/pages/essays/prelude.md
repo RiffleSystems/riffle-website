@@ -228,9 +228,11 @@ We can also represent this component visually. Currently it contains a single SQ
 Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms. In the future, we plan to use incremental view maintenance to keep queries maintained more efficiently.
 </aside>
 
-Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
+The UI looks like this:
 
-**todo: add animated screenshot**
+![](/assets/blog/prelude/tracklist.png)
+
+Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
 
 ### Sorting tracks
 
@@ -297,7 +299,7 @@ This establishes a new reactive dependency. Up until now, the query string was h
 
 Now when we click the table headers, we see the table reactively update!
 
-*Video: show table headers sorting*
+<video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
 
 What have we gained by taking the Riffle approach here?
 
@@ -346,7 +348,7 @@ Revisiting our graph of dependent queries, there’s now a new layer:
 
 Now, when the user types into the search box, their search term appears and filters the list of tracks:
 
-*video figure: searching tracks*
+<video controls="controls" muted="muted" src="/assets/blog/prelude/search.mp4" playsinline="" />
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
@@ -403,7 +405,7 @@ We've also explored this idea for integrating with external services. We've buil
 
 ### Building a complex app
 
-So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes.
+So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more.
 
 ![](/public/assets/blog/prelude/mytunes.png)
 
