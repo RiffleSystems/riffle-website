@@ -301,7 +301,7 @@ Now when we click the table headers, we see the table reactively update!
 
 What have we gained by taking the Riffle approach here?
 
-First, the system exposes the _structure_ of the computation, making it easier to **understand the provenance** of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
+First, it's **simpler to understand** what's going on in the system, because the system has structured dataflow at runtime which exposes the provenance of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
 
 Second, we can achieve more **efficient execution** by pushing computations down into a database. For example, we can maintain indexes in a database to avoid the need to sort data in application code, or manually maintain ad hoc indexes.
 
@@ -395,15 +395,9 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 ### Interoperability through data-centric APIs
 
-*todo*
+One thing we've found intriguing about our prototype is that we can inspect and edit the entire state of the system in a generic database editor. When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a tool like TablePlus. In addition to debugging any state in the app, we can also do things like change the current sort order or play/pause music. Of course, this could also be done programatically by a script that talks to the database.
 
-Demo: TablePlus changing seach term / sort order
-
-play state demo
-
-API as noun not verb
-
-briefly mention Spotify daemon
+We've also explored this idea for integrating with external services. We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API. Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database. In practice, the application can simply use the database; we have a separate daemon which observes the database and syncs its state with Spotify.
 
 ### Building a complex app
 
