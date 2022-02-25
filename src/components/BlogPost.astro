@@ -1,5 +1,5 @@
 ---
-import AuthorList from "./AuthorList.astro";
+import { AuthorList } from "./AuthorList.jsx";
 
 export interface Props {
   title: string;
@@ -30,7 +30,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
         )}
         <p class="publish-date">{publishDate}</p>
         <h1 class="title">{title}</h1>
-        <AuthorList {authors} />
+        <AuthorList client:load {authors} />
       </header>
       <main>
         <slot />

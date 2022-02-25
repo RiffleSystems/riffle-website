@@ -1,9 +1,0 @@
----
-export interface Props {
-	author: {name: string, email: string, postSymbol?: string};
-}
-
-const { name, email, postSymbol } = Astro.props.author;
----
-
-<a href={"mailto:" + email}>{name}</a>{postSymbol && <sup>{postSymbol}</sup>}
