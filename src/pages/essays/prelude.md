@@ -15,6 +15,8 @@ draft: false
 description:
 ---
 
+<div style="color: red; font-weight: bold;">Private draft for feedback, please don't share!</div>
+
 Modern web applications have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
 ![](/assets/blog/prelude/layers.png)
