@@ -557,7 +557,7 @@ If we take the perspective that an entire component tree is a query, we could sa
 
 One could imagine pushing this "everything is a query" persepctive even further, though.
 Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
-We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's implementation of a text CRDT using Datalog.
+We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html).
 
 Taken to the extreme, we end up with a minimal model of an interactive app, where users take actions that are recorded in an event log, and then those actions cause changes in a UI described entirely by a declarative query.
 
