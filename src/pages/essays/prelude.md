@@ -454,7 +454,7 @@ This view is precisely analgous to the concept of a "view" in SQL database, exce
 In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
-### Data-based interoperability can be much better than action-based APIs.
+### Data-based interoperability offers advantages over action-based APIs.
 
 Since the introduction of object-oriented programming, most interoperability has been “verb-based”: that is, based on having programs call into each other using APIs. Indeed, new programmers are often taught to hide data behind APIs as much as possible in order to encapsulate state.
 
