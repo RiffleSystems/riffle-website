@@ -10,7 +10,7 @@ authors:
     - name: Nicholas Schiefer
       email: schiefer@mit.edu
   - name: Johannes Schickling
-    email: 
+    email:
   - name: Daniel Jackson
     email: dnj@csail.mit.edu
 publishDate: 28 Feb 2022
@@ -121,13 +121,13 @@ It would still be essential to configure state along various dimensions: persist
 
 ## Our prototype system
 
-To explore these ideas concretely, we built a prototype of the Riffle system as a state manager for web browser apps. Because our goal was to understand the developer experience rather than build an entire system, we reused existing technologies wherever possible.
+We've built an initial prototype of the Riffle system as a state manager for web browser apps.
+
+For this prototype, our goal was to explore possible developer experiences when working with local data, rather than build an entire polished system. As such, we reused existing tools whenever possible. We also substantially reduced scope by building a _local-only_ prototype which doesn't do any multi-device sync yet. Of course, sync will be a critical part of making this work useful for collaboration in the future; more on that in future essays.
 
 ![](/assets/blog/prelude/prototype.png)
 
-We built a reactive query layer over the SQLite embedded relational database, running in the browser with WASM via [SQL.js](https://sql.js.org/) project. We run SQLite in a web worker and persist data to IndexedDB, using the [absurd-sql](https://github.com/jlongster/absurd-sql) library. We've also built a desktop version which uses [Tauri](https://tauri.studio/) and runs SQLite in a native process. For rendering, we use React, which interacts with Riffle via custom hooks.
-
-One major limitation of this prototype is that it's  _local-only_ system; we have not actually built a sync system for it. For this particular prototype we wanted to focus on the experience of building a UI with local data, rather than the sync aspects. It's already known that building a CRDT-based sync system with SQLite is possible (e.g., James Long's [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild) project), and we plan to cover synchronization issues in future essays.
+We built a reactive query layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. To run apps fully in the browser (pictured above), we run the SQLite database in a browser web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). To build desktop apps, we build the frontend UI in [Tauri](https://tauri.studio/) and run SQLite in a native process, persisting the device filesystem. For rendering, we use React, which interacts with Riffle via custom hooks.
 
 In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -157,28 +157,29 @@ In this section, we’ll demo our prototype by showing how to use it to build a 
 
 ### Showing a list of tracks
 
-In our app, we’d like to show a list view, where each track has a single row showing its album and artist name.
+In our app, we’d like to show a list view, where each track has a single row showing its album and artist name. Using SQL, it’s straightforward to load the name for each track, and to load the name of its album and artist. We can do this declaratively, specifying the tables to join separately from any particular join strategy.
 
-| Name | Album | Artist |
-| --- | --- | --- |
-| If I Ain’t Got You | The Diary of Alicia Keys | Alicia Keys |
-| Started From the Bottom | Nothing Was The Same | Drake |
-| Love Never Felt So Good | XSCAPE | Michael Jackson |
+<aside>
+One downside of SQL here is that the join syntax is verbose; in a language like GraphQL we could traverse this association more compactly.
+</aside>
 
-Using SQL, it’s straightforward to load the name for each track, and to load the name of its album and artist. We can do this declaratively, specifying the tables to join separately from any particular join strategy.
 
 ```sql
 select
   tracks.name as name,
-  albums.name as album_name
-  artists.name as album_name
+  albums.name as album
+  artists.name as artist
 from tracks
   left outer join albums on tracks.album_id = albums.id
   left outer join artists on tracks.artist_id = artists.id
 ```
-<aside>
-One downside of SQL here is that the join syntax is verbose; in a language like GraphQL we could traverse this association more compactly.
-</aside>
+This query will produce results like this:
+
+| name | album | artist |
+| --- | --- | --- |
+| If I Ain’t Got You | The Diary of Alicia Keys | Alicia Keys |
+| Started From the Bottom | Nothing Was The Same | Drake |
+| Love Never Felt So Good | XSCAPE | Michael Jackson |
 
 Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data:
 
@@ -206,25 +207,25 @@ const TrackList = () => {
     <thead>
       <th>Name</th>
       <th>Album</th>
-      <th>Artists</th>
+      <th>Artist</th>
     </thead>
     <tbody>
       {tracks.map(track => <tr>
         <td>{track.name}</td>
-        <td>{track.album_name}</td>
-        <td>{track.concatenated_artists}</td>
+        <td>{track.album}</td>
+        <td>{track.artist}</td>
       </tr>)}
     </tbody>
   </table>
 }
 ```
 
-We can also represent this component and its single query visually:
+We can also represent this component visually. Currently it contains a single SQL query which depends on some global app state tables, as well as a view template.
 
 ![](/assets/blog/prelude/component-1.png)
 
 <aside>
-Our prototype implements the most naive reactivity approach: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast because SQLite can run many common queries very fast. In general, this is an instance of the problem of incremental view maintenance [cite] and we plan to explore far more efficient strategies for keeping these queries updated.
+Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms. In the future, we plan to use incremental view maintenance to keep queries maintained more efficiently.
 </aside>
 
 Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
@@ -290,7 +291,7 @@ from (${get(tracksQuery.queryString)})
 `)
 ```
 
-This establishes a new reactive dependency. Up until now, the query string was hardcoded, and it would only reactively update when the database contents changed. Now, the query string itself depends on the local component state. Riffle’s reactivity system ensures that queries run in a correct dependency order—if the sort property changes, the query for that property must run before its result can be used in the tracks query.
+This establishes a new reactive dependency. Up until now, the query string was hardcoded, and it would only reactively update when the database contents changed. Now, the query string itself depends on the local component state. Riffle’s reactivity system ensures that queries run in a correct dependency order.
 
 ![](/assets/blog/prelude/component-2.png)
 
@@ -300,9 +301,11 @@ Now when we click the table headers, we see the table reactively update!
 
 What have we gained by taking the Riffle approach here?
 
-- We have structured dataflow that makes it easier to **understand the provenance** of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
-- We can achieve more **efficient execution** by pushing computations down into a database. For example, we can maintain indexes in a database to avoid the need to sort data in our application or manually maintain ad hoc indexes in our app code.
-- UI state is **persistent by default**. It’s often convenient for end-users to have state like sort order or scroll position persisted, but it takes active work for app developers to add these kinds of features. In Riffle, persistence comes for free, although local and ephemeral state are still easily achievable by setting up component keys accordingly.
+First, the system exposes the _structure_ of the computation, making it easier to **understand the provenance** of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
+
+Second, we can achieve more **efficient execution** by pushing computations down into a database. For example, we can maintain indexes in a database to avoid the need to sort data in application code, or manually maintain ad hoc indexes.
+
+Finally, UI state is **persistent by default**. It’s often convenient for end-users to have state like sort order or scroll position persisted, but it takes active work for app developers to add these kinds of features. In Riffle, persistence comes for free, although ephemeral state is still easily achievable by setting up component keys accordingly.
 
 ### Search
 
