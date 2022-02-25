@@ -89,7 +89,6 @@ In a local-first architecture where queries are much cheaper to run, we can take
 <aside>
 <p>
 As we discussed our ideas with working app developers, we found that many people who work with databases in a web context has an intuition that <em>databases are slow</em>.
-For example, one developer thought that pulling down a few thousand rows in one query was going to be too slow, while another thought that queries are necessarily so slow that they must be run asychronously, rather than in the UI thread.
 </p>
 
 <p>
@@ -99,7 +98,7 @@ This is striking because even primitive databases like SQLite are fast on modern
 <p>
 We hypothesize three key sources of this mistaken intuition:
 </p>
-1. Developers are used to interacting with databases over the network, where network latencies apply. This might explain why they expect that all database operations should operate asynchronously.
+1. Developers are used to interacting with databases over the network, where network latencies apply.
 2. Developer intuitions about database performance were developed when hardware was much slower. Back in the days of spinning hard drives and 8 MB of RAM, a single disk seek could take many milliseconds. Modern hardware is astoundingly fast, and many more datasets fit into main memory even on mobile devices.
 3. Many relational database management systems aren't built for low latency. For example, many databases are built for analytics workloads on large data sets, where small amounts of latency are irrelevant to overall performance.
 </aside>
