@@ -123,17 +123,13 @@ It would still be useful to configure state along various dimensions: persistenc
 
 ## Our prototype system
 
-- *Goal: prototype the experience of building an app in this style, learn about the problem*
-- *important: this is not the final thing! and it's nowhere close to a product*
-- Browser app: React + SQL.js + absurd-sql
-- Tauri app: browser UI + Sqlite-native
-- Our prototype: reactive graph around SQLite, + React hooks. Let's see by example.
+To explore these ideas concretely, we built a prototype of the Riffle system as a state manager for web browser apps. Because our goal was to understand the developer experience rather than build an entire system, we reused existing technologies wherever possible.
+
+We built a reactive query layer over the SQLite embedded relational database, running in the browser with WASM via [SQL.js](https://sql.js.org/) project. We run SQLite in a web worker and persist data to IndexedDB, using James Long's [absurd-sql](https://github.com/jlongster/absurd-sql) library. We've also built a desktop version which uses [Tauri](https://tauri.studio/) and runs SQLite in a native process. For rendering, we use React, which interacts with Riffle via custom hooks.
 
 ![](/assets/blog/prelude/prototype.png)
 
-In this section, we’ll concretely demonstrate our prototype system by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
-
-### Schema
+In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app.
 
 Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -188,10 +184,6 @@ One downside of SQL here is that the join syntax is verbose; in a language like 
 
 Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data:
 
-![](/assets/blog/prelude/component-1.png)
-
-As actual React code, it looks something like this:
-
 ```jsx
 import { db, useQuery } from 'riffle'
 
@@ -228,6 +220,10 @@ const TrackList = () => {
   </table>
 }
 ```
+
+We can also represent this component and its single query visually:
+
+![](/assets/blog/prelude/component-1.png)
 
 <aside>
 Our prototype implements the most naive reactivity approach: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast because SQLite can run many common queries very fast. In general, this is an instance of the problem of incremental view maintenance [cite] and we plan to explore far more efficient strategies for keeping these queries updated.
@@ -496,7 +492,7 @@ In most cases, we chose to simply delete the relevant tables and recreate them.
 Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
 We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
-### SQL is powerful and familiar, not a good language all types of data.
+### SQL has shortcomings for UI development
 
 We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
 
@@ -506,18 +502,18 @@ Nonetheless, SQL was a consistent thorn in our side during this project. The def
 
     There are various extensions to SQL that support nesting, but many of them are not that good and the good ones are not widely available.
 
-2. SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely. In our prototype, we ended up adding a small GraphQL layer on top of SQL for ergonomic reasons
+2. SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely. In our prototype, we even ended up adding a small GraphQL layer on top of SQL for ergonomic reasons.
 3. SQL’s scalar expression language is weird and limited. Often, we wanted to factor out a scalar expression for re-use, but doing this in SQLite was annoying enough that we didn’t do it often.
 
-We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. However, we think that SQL is mostly not a good fit for a general relational language for building apps.
+We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. Better relational languages could make UI development more ergonomic and avoid the need for clumsy ORM layers. Also, the prospect of replacing SQL seems more realistic in a domain like frontend UI where SQL hasn't yet taken hold in the first place.
 
 ### Building a reactive query system using existing tools is full of technical challenges.
 
-In principle, declarative queries should be a step towards good app perforamnce by default: there need not be a strong coupling bewteen the way that data transformations are described and how they are executed. 
+In principle, declarative queries should be a step towards good app perforamnce by default: there need not be a strong coupling bewteen the way that data transformations are described and how they are executed.
 The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application.
 Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
 
-We largely did not achieve this vision in practice.
+We largely have not achieved this vision in practice.
 Interestingly, we had only a few problems with slow queries: even when running in the browser using WebAssembly, SQLite is fast enough that most queries with a few joins over a few tens of thousands of rows complete in less than a millisecond.
 When we did hit query performance problems, we usually traced them to the limitations of SQLite's [relatively simple query optimizer](https://www.sqlite.org/optoverview.html).
 For example, SQLite's optimizer does not optimize across subquery boundaries, but we made extensive use of subqueries to logically decompose our query graph.
@@ -527,7 +523,7 @@ We saw the runtimes of several slow queries drop by a factor of 20, although we 
 
 Outside of the database proper, we encountered a host of technical challenges in making a reactive query system using existing frontend web development tools.
 For example, we initially handled queries asychronously in a web worker, but found that that imposed inter-process communication latencies of up to 5 milliseconds.
-We traced this to basic properties of the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model), and eventually moved the query engine entirely into the UI thread for better performance.
+We traced this to basic properties of the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model), and eventually moved the query engine entirely into the UI thread for better performance. [todo: decide how to reconcile this w discussion above]
 
 We also hit many subtle problems while interfacing with React.
 TK Geoffrey to write something about hooks
