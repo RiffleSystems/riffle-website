@@ -395,15 +395,21 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 ### Interoperability through data-centric APIs
 
+_todo: merge this w/ the finding below?_
+
 One thing we've found intriguing about our prototype is that we can inspect and edit the entire state of the system in a generic database editor. When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a tool like TablePlus. In addition to debugging any state in the app, we can also do things like change the current sort order or play/pause music. Of course, this could also be done programatically by a script that talks to the database.
 
 We've also explored this idea for integrating with external services. We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API. Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database. In practice, the application can simply use the database; we have a separate daemon which observes the database and syncs its state with Spotify.
 
 ### Building a complex app
 
-- How does this scale up to a complex app?
-- show component tree diagram // sources/sinks
-- We're actually building a full-featured music app, MyTunes! (screenshot)
+So far we've shown a very simple example, but how does this approach scale up to a more complex app? To understand this more, we've been using a version of Riffle to build a full-featured music manager application called MyTunes.
+
+![](/public/assets/blog/prelude/mytunes.png)
+
+_todo: component tree diagram_
+
+- Seems viable so far, long way to go
 - Challenges:
   - React reactivity
   - Performance
