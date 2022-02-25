@@ -56,33 +56,33 @@ To start exploring these ideas in practice, we've built an initial prototype: a 
 
 ## Hypotheses
 
-As we started our project, we had some specific ideas about how ideas from databases could dramatically simplify state management in GUI apps.
+We started our project with some specific hypotheses about how ideas from the databases world could simplify state management in GUI apps.
 
 ### Declarative queries clarify application structure
 
 ![](/assets/blog/prelude/declarative.png)
 
-Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, if a list of todos and projects is synced across clients, the UI may need to join across those collections and filter/group the data for display.
+Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, in a music app, if a list of tracks and albums is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 
-We observe that in existing app architectures, a large amount of effort and code is expended on collecting and reshaping data.
-In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation: an app might first convert from SQL-style tuples to a Ruby object, then to a JSON HTTP-response, and then finally to a frontend Javascript object in the browser.
+In existing app architectures, a large amount of effort and code is expended on collecting and reshaping data.
+A traditional web app might first convert from SQL-style tuples to a Ruby object, then to a JSON HTTP-response, and then finally to a frontend Javascript object in the browser.
 Each of these transformations is performed separately, and there is often considerable developer effort in threading a new column all the way through these layers.
 
 <aside>
 As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
 </aside>
 
-In a local-first application, this doesn't need to be the case: all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code.
+In a local-first application, this doesn't need to be the case; all the queries can happen directly within the client. This raises the question: how should those queries be constructed and represented? We suspect that a good answer for many applications is to use a **relational query model** directly within the client UI code.
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
 
-This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's a less common approach to managing state in client-side web development, but we think it is a pattern that deserves to be [more](https://github.com/tonsky/datascript) [widely](https://jlongster.com/future-sql-web) [used](https://tonsky.me/blog/the-web-after-tomorrow/).
+This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's not a common approach to managing state in client-side web development, although there have been successful projects in this area, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser (and more recently, the [absurd-sql](https://jlongster.com/future-sql-web) project which persists a SQL.js database using IndexedDB). We think relational queries in the client UI is a pattern that deserves to be more widely used.
 
 ### Fast reactive queries provide a clean mental model
 
 ![](/assets/blog/prelude/reactive.png)
 
-A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. This approach has been proven effective in many contexts—React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
+A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
@@ -105,19 +105,19 @@ We hypothesize three key sources of this mistaken intuition:
 3. Many relational database management systems aren't built for low latency. For example, many databases are built for analytics workloads on large data sets, where small amounts of latency are irrelevant to overall performance.
 </aside>
 
-One key observation about reactive systems is that making the reactive loop faster can qualitatively change the user experience. For example, a small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; even a few seconds of delay when propagating a change can create a different experience. We think the goal of a data management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to worry as about temporarily inconsistent loading states, and the user gets fast software.
+Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
-This performance budget is ambitious, but there are reasons to believe it's achievable, especially if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, re-running queries from scratch is the most naive way to achieve reactivity, but there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make updates to queries much faster than re-running from scratch.
+This performance budget is ambitious, but there are reasons to believe it's achievable if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
 
 ### Managing all state in one system provides greater flexibility
 
 ![](/assets/blog/prelude/unified.png)
 
-Traditionally, ephemeral "UI state", e.g. local state in a React component, is treated as separate from "application state". One reason for this is performance characteristics—it would be impractical to have the hover-state of a button depend on a network roundtrip, or even blocking on a disk write. With a fast database so close at hand, this performance split doesn't necessarily need to exist.
+Traditionally, ephemeral "UI state," like the content of a text input box, is treated as separate from "application state" like the list of tracks in a music collection. One reason for this is performance characteristics—it would be impractical to have a text input box depend on a network roundtrip, or even blocking on a disk write.
 
-What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach could help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
+With a fast database close at hand, this split doesn't necessarily need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
-It would still be useful to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This configurability could have concrete benefits—for example, it's often useful to persist UI state, like the currently active tab in an app. Also, in modern real-time collaborative apps, UI state like cursor position or hover state is sometimes shared among clients. A unified approach to state could accommodate these kinds of changes more easily.
+It would still be essential to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This would make it easy to decide to persist some UI state, like the currently active tab in an app. UI state could even be shared among clients—in real-time collaborative applications, it's often useful to share cursor position, live per-character text contents, and other state that was traditionally relegated to local UI state.
 
 ## Our prototype system
 
