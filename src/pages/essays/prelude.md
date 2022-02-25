@@ -639,7 +639,7 @@ Put another way: you can’t use Airtable to write iTunes, but we’ve been able
 
 There are several other attempts at extending the relational model to produce tree-structured results like a DOM.
 Most notably, Jamie Brandon's [Imp](TK link) project constitutes several takes on relational langauges for definin UIs.
-Our project is highly aligned iwth the vision of Imp; the biggest difference is that we have been less willing to throw away existing tools entirely and more eager to make use them, in order to get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.get feedback from real use cases, like myTunes.
+Our project is highly aligned iwth the vision of Imp; the biggest difference is that we have been less willing to throw away existing tools entirely and more eager to make use them, in order to get feedback from real use cases, like myTunes.
 
     - GraphQL
 
