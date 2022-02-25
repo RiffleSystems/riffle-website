@@ -18,26 +18,23 @@ description:
 
 <div style="color: red; font-weight: bold;">Private draft for feedback, please don't share!</div>
 
-Modern web applications have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
+Modern web applications are complicated to build because they have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
 ![](/assets/blog/prelude/layers.png)
 
-While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, user interface development is a specialized skill set: many skilled programmers like scientists struggle to build web UIs, and even advanced developers invest enormous effort to create performant, reliable apps.
+While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, app development is a specialized skill set: many skilled programmers like scientists struggle to build web UIs, and even advanced developers invest enormous effort to create performant, reliable apps.
 
 How might we simplify this stack?
 
-We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling collaborative applications including real-time collaboration when clients are online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
+We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling real-time collaboration when clients are all online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 
 It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is indeed complicated—but we think that the local-first architecture can make app development substantially simpler.
 A large amount of effort in a cloud app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
 On the client, most web UI technologies have been developed in a context where data is assumed to live far away on a server, and have assumed the associated complexity.
-Now, the data can instead be immediately close at hand on the client device, enabling different approaches.
 
-This insight is not novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users.
-However, we believe that the local-first architecture offers even deeper opportunities for simplifying app development.
-Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
+Now, the data can instead be immediately close at hand on the client device, enabling different approaches. Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
 
-In the Riffle project, we're interested in exploring these implications in the broadest sense. Our approach is based on three observations:
+This insight is not totally novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users, removing traditional server layers. In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack. Our approach is based on three observations:
 
 **Managing state is hard.** Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
 In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
@@ -53,7 +50,7 @@ We are especially interested in work on better query languages and fast incremen
 However, many of these ideas are implemented only in high-end analytics products, or a system with high latency, or some other piece of technology that is unsuitable for app development.
 We think there are even greater opportunities to apply ideas from database research to app development.
 
-To start learning how these ideas might work in practice, we've built a prototype state management system: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into the opportunities and challenges in this space.
+To start exploring these ideas in practice, we've built an initial prototype: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into opportunities and challenges, which we share in this essay.
 
 ## Hypotheses
 
