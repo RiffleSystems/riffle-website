@@ -419,7 +419,7 @@ briefly mention Spotify daemon
 
 ## Findings
 
-We see our work with our prototype as an exploratory experiments to understand our design principles in a serious context. As we iterated on our prototype, we came to some interesting conclusions.
+Overall, working with our prototype system made us optimistic that this is a promising direction for simplifying application development. At the same time, it also clarified some of the challenges to making this approach truly work. Here are some of our reflections.
 
 ### Relational queries enable qualitatively different ways to understand programs.
 
@@ -513,26 +513,22 @@ We view these issues as shortcomings of *SQL in particular*, and not the idea of
 
 ### Performance is a challenge when integrating with existing web tools
 
-In principle, declarative queries should be a step towards good app performance by default: there need not be a strong coupling bewteen the way that data transformations are described and how they are executed.
-The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application.
-Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
+In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
 
 In practice, our results have been mixed—the core database itself has been mostly fast, but interfacing with it in a low-latency way has been tricky.
 
 Even when running in the browser using WebAssembly, SQLite is fast enough that most queries with a few joins over a few tens of thousands of rows complete in less than a millisecond.
 We have hit a few cases where queries took hundreds or thousands of milliseconds, usually when joining over multiple large tables. We've generally traced these back to the limitations of SQLite's [relatively simple query optimizer](https://www.sqlite.org/optoverview.html).
-For example, SQLite's optimizer does not optimize across subquery boundaries, but we made extensive use of subqueries to logically decompose our query graph. Also, SQLite only does nested loop joins, and doesn't use some of the advanced join algorithms used by other databases.
-
-As an experiment, we tried replacing SQLite with [DuckDB](https://duckdb.org/), a newer embedded database focussed on analytical query workloads and built using a [state-of-the-art optimizer architecture](https://duckdb.org/why_duckdb#standing-on-the-shoulders-of-giants).
+For example, SQLite's optimizer does not optimize across subquery boundaries, but we made extensive use of subqueries to logically decompose our query graph. Also, SQLite only does nested loop joins, and doesn't use some of the advanced join algorithms used by other databases. As an experiment, we tried replacing SQLite with [DuckDB](https://duckdb.org/), a newer embedded database focussed on analytical query workloads and built using a [state-of-the-art optimizer architecture](https://duckdb.org/why_duckdb#standing-on-the-shoulders-of-giants).
 We saw the runtimes of several slow queries drop by a factor of 20, although we also hit other problems where DuckDB's optimizer was missing optimizations that we needed.
 
 However, outside of the database proper, we've encountered challenges in making a reactive query system that integrates well with existing frontend web development tools in a performant way.
 
-One challenge has been the latency of inter-process communication. When the reactive graph is running in the UI thread, but the database itself is on a web worker or native process, each query results in a message across processes, and requires query results to be serialized. Every query is also an async call from the UI thread, which adds some overhead associated with the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model). When the queries themselves take less than a millisecond to execute, we've found that this IPC overhead can easily exceed the actual query time.
+One challenge has been the latency of inter-process communication. When the reactive graph is running in the UI thread, but the database itself is on a web worker or native process, each query results in a message containing serialized data. Every query is also an async call from the UI thread, which adds overhead associated with the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model). When the queries themselves take less than a millisecond to execute, we've found that this IPC overhead can easily exceed the actual query time.
 
-We're actively exploring a few routes to solve this problem. One is to synchronously run SQLite itself in the UI thread, and to asynchronously mirror changes to a persistent database. This seems to dramatically decrease overhead, but has the downside that an occasional slow query could block the UI thread. Another route is to decrease IPC overhead, e.g. by using shared memory with a web worker to reduce serialization time. Finally, moving the Riffle reactive graph itself off the UI thread and colocating it with SQLite would help, but this introduces new challenges: if queries are written inside of component files, they'd need to get compiled or sent to the worker somehow.
+We're exploring a few routes to solve this problem. One is to synchronously run SQLite itself in the UI thread, and to asynchronously mirror changes to a persistent database. This removes overhead, but has the downside that an occasional slow query could block the UI thread. Another route is to find ways to reduce overhead, e.g. by using shared memory with a web worker to reduce serialization time. Finally, moving the Riffle reactive graph itself off the UI thread and colocating it with SQLite would help, but this introduces new challenges: if queries are written inside of component files, they'd need to get compiled or sent to the worker somehow.
 
-Another challenge has been integrating with React. In an ideal world, a write would result in Riffle fully atomically updating its query graph in a single pass, and minimally updating all the relevant templates. However, to preserve idiomatic React patterns (like passing component dependencies using props), we've found that it sometimes takes a few renders to respond to an update—a write occurs, React renders the UI tree, Riffle reacts and updates some queries, then React renders the tree again, and so on. We're still investigating the best patterns to integrate with React in a fast and unsurprising way. We've also looked into other frameworks like Svelte and SolidJS which have a very different approach to reactivity.
+Another challenge has been integrating with React. In an ideal world, a write would result in Riffle fully atomically updating its query graph in a single pass, and minimally updating all the relevant templates. However, to preserve idiomatic React patterns (like passing component dependencies using props), we've found that it sometimes takes a few passes to respond to an update—a write occurs, React renders the UI tree, Riffle reacts and updates some queries, then React renders the tree again, and so on. We're still investigating the best patterns to integrate with React in a fast and unsurprising way. We've also looked into other frameworks like Svelte and SolidJS which have a very different approach to reactivity.
 
 ## Towards a reactive, relational approach to state management
 
