@@ -15,16 +15,11 @@ draft: false
 description:
 ---
 
-Modern web applications are complicated to build and maintain because they have many layers of data representations spanning across the backend and frontend. For example, even a "simple" app might have:
-
-- a relational database, queried with SQL
-- an ORM mapping the relational database to in-memory objects, manipulated in a server-side language like Ruby or Node.JS
-- A REST or GraphQL API describing this data in a serialized form, manipulated via HTTP requests
-- Javascript objects in a rich client-side application, further manipulated in Javascript
+Modern web applications have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
 ![](/assets/blog/prelude/layers.png)
 
-While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. The result is that app development is a specialized, highly technical skill set: even many skilled programmers find it impossible to build simple user interfaces, and even advanced developers sometimes struggle to build performant, reliable apps.
+While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, user interface development is a specialized skill set: many skilled programmers (e.g., scientists) struggle to build  user interfaces, and even advanced UI developers invest enormous effort to create performant, reliable apps.
 
 How might we simplify this stack?
 
