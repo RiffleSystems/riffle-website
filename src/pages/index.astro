@@ -3,6 +3,7 @@
 import BaseHead from '../components/BaseHead.astro';
 import BlogHeader from '../components/BlogHeader.astro';
 import BlogPostPreview from '../components/BlogPostPreview.astro';
+import SubscriptionBox from "../components/SubscriptionBox.astro"
 import { sortBy } from 'lodash';
 
 interface MarkdownFrontmatter {
@@ -53,35 +54,6 @@ allPosts = sortBy(allPosts, 'publishDate').reverse();
 				margin-bottom: 4rem;
 			}
 
-            .email-container {
-              display: inline-block;
-            }
-
-            .email-box {
-              border: 1px solid #ddd;
-              height: 100%;
-                padding: 0.5em 1em;
-              display: table-cell;
-              outline: none;
-              border-radius: 2px 0 0 2px;
-            }
-
-            .email-box:hover {
-              border-color: var(--color-riffle-green)
-            }
-
-            .email-button {
-              background: var(--color-riffle-green);
-              color: white;
-              text-transform: uppercase;
-              border: 1px solid var(--color-riffle-green);
-              border-radius: 0 2px 2px 0;
-              padding: 0.5em 1em;
-              height: 100%;
-              cursor: pointer;
-              display: table-cell;
-            }
-
 		</style>
 	</head>
 
@@ -100,18 +72,7 @@ allPosts = sortBy(allPosts, 'publishDate').reverse();
 				</section>
 
                 <section>
-                    <form
-                      action="https://buttondown.email/api/emails/embed-subscribe/riffle"
-                      method="post"
-                      target="popupwindow"
-                    >
-                      <label for="bd-email">Subscribe for updates about the Riffle project:</label>
-                      <div class="email-container">
-                        <input class="email-box" type="email" name="email" id="bd-email" placeholder="Email"/>
-                        <input class="email-button" type="submit" value="Subscribe" />
-                      </div>
-                    </form>
-                
+					<SubscriptionBox prompt="Subscribe for updates about the Riffle project:" />
                 </section>
 
 				<section aria-label="Blog post list">
