@@ -397,7 +397,7 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 *todo*
 
-Fun demo: TablePlus changing seach term / sort order
+Demo: TablePlus changing seach term / sort order
 
 play state demo
 
@@ -405,12 +405,16 @@ API as noun not verb
 
 briefly mention Spotify daemon
 
-### Limitations of the prototype
+### Building a complex app
 
-Many things we haven’t had time for yet...
-
-- sync! future project.
-- access control, partial data views on client
+- How does this scale up to a complex app?
+- We're actually building a full-featured music app, MyTunes! (screenshot)
+- Challenges:
+  - React reactivity
+  - Performance
+  - Ergonomics: GQL, typing, schema migration
+  - still need to add sync
+  - access control, partial data views on client?
 
 ## Findings
 
@@ -596,6 +600,8 @@ We'd love your feedback: we're reachable by email at [feedback@riffle.systems](m
 *Thanks to TK, TK, TK for feedback*
 
 ---
+
+_related work section will probably be removed from this draft_
 
 ## Related Work
 
