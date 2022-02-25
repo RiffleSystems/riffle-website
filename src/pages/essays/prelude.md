@@ -66,13 +66,11 @@ We observe that in existing app architectures, a large amount of effort and code
 In traditional web applications, these data manipulations are spread across many different layers, including backend SQL queries, API calls, and client-side data manipulation: an app might first convert from SQL-style tuples to a Ruby object, then to a JSON HTTP-response, and then finally to a frontend Javascript object in the browser.
 Each of these transformations is performed separately, and there is often considerable developer effort in threading a new column all the way through these layers.
 
-In a local-first application, this doesn't need to be the case: all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? For example, it would be possible to write imperative Javascript code to translate the base state into a UI, but this might not be the most ergonomic or performant approach, especially for complex operations like grouped aggregates.
-
 <aside>
 As we'll discuss throughout this piece, SQL as a specific instantiation of the relational model has some shortcomings. This has often led to adding layers around SQL, like ORMs and GraphQL. However, in principle, a sufficiently ergonomic replacement for SQL could eliminate the need for such additional layers.
 </aside>
 
-We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code.
+In a local-first application, this doesn't need to be the case: all the queries can happen directly within the client. This raises the question: how should these queries be constructed and represented? We suspect that a good answer for many applications is to use a **relational model** to express queries within the client UI code.
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
 
