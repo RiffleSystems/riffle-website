@@ -1,7 +1,7 @@
 ---
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
-title: Simpler UI development with a client-side database
+title: Managing UI state with a reactive relational database
 authors:
   -
     - name: Geoffrey Litt
@@ -571,6 +571,10 @@ We're excited by this potential, and even more excited by the possiblity that we
 If you'd like to follow our work, consider subscribing for udpates:
 We'd love your feedback: we're on Twitter and email.
 
+*Thanks to TK, TK, TK for feedback*
+
+---
+
 ## Related Work
 
 How is this different from?
@@ -632,14 +636,3 @@ Our project is highly aligned iwth the vision of Imp; the biggest difference is 
     - Differential Datalog
     - Noria (MIT project)
     - SQLive
-
-## meta notes / open questions
-
-- give more precise perf numbers?
-- run the demo live in the page?
-- where to mention that myTunes is a real project?
-- potential feedback givers:
-    - johannes
-    - pvh
-    - martin
-    - james long
