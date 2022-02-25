@@ -19,26 +19,23 @@ Modern web applications have many redundant data representations spanning across
 
 ![](/assets/blog/prelude/layers.png)
 
-While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, user interface development is a specialized skill set: many skilled programmers (e.g., scientists) struggle to build  user interfaces, and even advanced UI developers invest enormous effort to create performant, reliable apps.
+While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across many process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, user interface development is a specialized skill set: many skilled programmers like scientists struggle to build web UIs, and even advanced developers invest enormous effort to create performant, reliable apps.
 
 How might we simplify this stack?
 
 We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling collaborative applications including real-time collaboration when clients are online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 
-It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is seen as a hard task that might involve adding client-side caching.
-However, we think that the local-first architecture offers opportunities to make app development substantially simpler to build.
+It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is seen as a difficult endeavor.
+However, we think that the local-first architecture can make app development substantially simpler.
 A large amount of effort in a traditional, cloud-oriented app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
+Most client-side web UI technologies have been developed in a context where data is assumed to live far away on a server.
+Now, the data can instead be immediately close at hand on the client device, enabling different approaches.
 
-Most client-side web UI technologies have been developed in a context where data is assumed to live far away on a server; now the data can be immediately close at hand on the client device. This feels like it could be huge _advantage_ for simplifying app development.
-This idea is not novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to autoamtically synchronize their state between users.
-
-However, we believe that the local-first architecture offers even more opportunities for simplifying app development.
-If an application developer can rely on the data being so  close at hand, might there be a simpler way to write apps?
+This insight is not novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users.
+However, we believe that the local-first architecture offers even deeper opportunities for simplifying app development.
 Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
 
-Changing from a traditional web stack to a local-first architecture could have profound implications throughout the entire UI development stack; in the Riffle project, we're interested in exploring these implications in the broadest sense.
-
-Our approach is based on three observations:
+In the Riffle project, we're interested in exploring these implications in the broadest sense. Our approach is based on three observations:
 
 **Managing state is hard.** Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
 In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
