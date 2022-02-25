@@ -2,7 +2,7 @@
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
   import SubscriptionBox from '../../components/SubscriptionBox.astro'
-title: Managing UI state with a reactive relational database
+title: Building data-centric apps with a reactive relational database
 authors:
   -
     - name: Geoffrey Litt
