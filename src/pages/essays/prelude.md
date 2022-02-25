@@ -25,10 +25,9 @@ How might we simplify this stack?
 
 We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling collaborative applications including real-time collaboration when clients are online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 
-It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is seen as a difficult endeavor.
-However, we think that the local-first architecture can make app development substantially simpler.
-A large amount of effort in a traditional, cloud-oriented app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
-Most client-side web UI technologies have been developed in a context where data is assumed to live far away on a server.
+It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is indeed complicated—but we think that the local-first architecture can make app development substantially simpler.
+A large amount of effort in a cloud app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
+On the client, most web UI technologies have been developed in a context where data is assumed to live far away on a server, and have assumed the associated complexity.
 Now, the data can instead be immediately close at hand on the client device, enabling different approaches.
 
 This insight is not novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users.
@@ -125,13 +124,13 @@ It would still be useful to configure state along various dimensions: persistenc
 
 To explore these ideas concretely, we built a prototype of the Riffle system as a state manager for web browser apps. Because our goal was to understand the developer experience rather than build an entire system, we reused existing technologies wherever possible.
 
-We built a reactive query layer over the SQLite embedded relational database, running in the browser with WASM via [SQL.js](https://sql.js.org/) project. We run SQLite in a web worker and persist data to IndexedDB, using James Long's [absurd-sql](https://github.com/jlongster/absurd-sql) library. We've also built a desktop version which uses [Tauri](https://tauri.studio/) and runs SQLite in a native process. For rendering, we use React, which interacts with Riffle via custom hooks.
-
 ![](/assets/blog/prelude/prototype.png)
 
-In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app.
+We built a reactive query layer over the SQLite embedded relational database, running in the browser with WASM via [SQL.js](https://sql.js.org/) project. We run SQLite in a web worker and persist data to IndexedDB, using the [absurd-sql](https://github.com/jlongster/absurd-sql) library. We've also built a desktop version which uses [Tauri](https://tauri.studio/) and runs SQLite in a native process. For rendering, we use React, which interacts with Riffle via custom hooks.
 
-Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
+One major limitation of this prototype is that it's  _local-only_ system; we have not actually built a sync system for it. For this particular prototype we wanted to focus on the experience of building a UI with local data, rather than the sync aspects. It's already known that building a CRDT-based sync system with SQLite is possible (e.g., James Long's [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild) project), and we plan to cover synchronization issues in future essays.
+
+In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
 **tracks**
 
