@@ -9,6 +9,8 @@ authors:
       email: glitt@mit.edu
     - name: Nicholas Schiefer
       email: schiefer@mit.edu
+  - name: Johannes Schickling
+    email: 
   - name: Daniel Jackson
     email: dnj@csail.mit.edu
 publishDate: 28 Feb 2022
