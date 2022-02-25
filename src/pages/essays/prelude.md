@@ -403,19 +403,11 @@ We've also explored this idea for integrating with external services. We've buil
 
 ### Building a complex app
 
-So far we've shown a very simple example, but how does this approach scale up to a more complex app? To understand this more, we've been using a version of Riffle to build a full-featured music manager application called MyTunes.
+So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes.
 
 ![](/public/assets/blog/prelude/mytunes.png)
 
-_todo: component tree diagram_
-
-- Seems viable so far, long way to go
-- Challenges:
-  - React reactivity
-  - Performance
-  - Ergonomics: GQL, typing, schema migration
-  - still need to add sync
-  - access control, partial data views on client?
+So far, it appears that the basic model is viable, but much work remains to make the experience pleasant for an application developer. One challenge has been integrating Riffle's reactive queries with React's own reactivity in a way that doesn't create confusion for a developer. Another challenge has been maintaining low latency even as the app grows in complexity. Finally, there are many details we're still working on which aren't essential to the idea but which matter greatly for the developer experience, including API design, static types for query results, schema and migration management.
 
 ## Findings
 
