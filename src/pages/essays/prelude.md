@@ -416,42 +416,50 @@ API as noun not verb
 
 briefly mention Spotify daemon
 
-## Limitations of the prototype
+### Limitations of the prototype
 
 Many things we haven’t had time for yet...
 
 - sync! future project.
 - access control, partial data views on client
-- Many incidental perf challenges: SQLite’s limited planner, React rendering, browser event loop
-- migrations are a fundamental challenge
 
 ## Findings
 
 We see our work with our prototype as an exploratory experiments to understand our design principles in a serious context. As we iterated on our prototype, we came to some interesting conclusions.
 
-### Declarative queries make data dependencies clear.
+### Relational queries enable qualitatively different ways to understand programs.
 
-A lot of the complexity of app development comes from managing data dependencies: when something happens, we need to update all of the relevant pieces of the app right away. Traditionally, an app would have a bunch of imperative code in between an action and all of its dependencies. In contrast, our prototype makes most of these dependencies declarative, which makes it much easier to get a birds-eye view of how data moves within the application.
+We began with the observation that a lot of program complexity comes from managing state and propogating state changes, and that declarative quries are a natural, ergonomic way to express those data transformations.
+We hypothesized that this could make apps much easier to develop.
+Although SQL is declarative, we found that expressing data transformations in SQL was not always especially easy for the app developer to interpet _statically_.
+For one, SQL is not an especially ergonomic language for many of the transformations that an app developer needs, especially those that involve returning nested data types.
+In addition, few frontend developers are deeply familiar with SQL, and it feels distinctly out-of-place in the middle of a React app.
 
-This became especially clear as we built our prototype debugger. If our core application logic was written in Javascript, we could debug our code in an imperative, line-by-line style, but this obscures what’s actually going on. Since our data flow is expressed declaratively, we can just view the data *as they are transformed by the query.*
+Nonetheless, relational queries created intriguing opportunities to understand data transformations _dynamically_.
+As we built our our debugger, we were impressed by how useful it was to inspect entire result sets from queries in our data transformation pipeline.
+Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
+This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
 
-- [ ]  Should we say something about how this is frame-wise rather than row-wise like a for loop? Feel profound but I don’t know how to say it.
+It's interesting to compare this set-wise debugging from debuggers in imperative programs.
+Nearly all imperative debuggers work _point-wise_: we can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
+The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
-### Good relational modeling decouples read and write access patterns.
+### It's interesting to think of an entire app as a declarative query over the app state.
 
-Commonly, frontend web apps represent the data as a complex structured object: in the best case, these objects can be serialized as JSON, but in general they can be arbitrary object graphs within the VM. These object graphs are in many ways richer than simple relations.
+This version or Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
+Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
 
-However, an object-graph data model generally couples the read- and write- access paths together. For example, a developer might build their main data store as a JSON list, with lookup by index (roughly a primary key), since this is convenient for writes. However, allowing quick lookup by another attribute, like a user name, requires either a rewrite of the data model or hand-rolled index logic.
+[TK insert picture]
 
-In contrast, relations are abstract objects with no particular physical semantics. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
+In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
+So, we could view the queries and template together as a large, tree-structured view of the data.
 
-### Pervasive reactivity has super-linear benefits.
+We can extend this perspective even further: each component takes some arguments (props, in React parlance), which might themselves be queries, but are also a pure function of the data.
+We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
+This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
-A standard web application might have several components that are reactive in one way or another: for example, frontend web frameworks like React and Svelte offer a reactive way to manage the DOM. However, those reactive pieces are generally interspersed with non-reactive components like REST APIs.
-
-We have found that reactivity has super-linear benefits: when non-reactive parts of the stack are removed, we see dramatic conceptual simplifications. We would like to lean even further to this, and see how much of a full application can be expressed in an end-to-end reactive framework.
-
-- [ ]  Be more specific
+In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
+We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
 ### Data-based interoperability can be much better than action-based APIs.
 
@@ -465,14 +473,36 @@ Second, verb-based APIs create an unfortunate n-to-n problem: every app needs to
 
 Third, we found that treating the data format as a core interface for an app solves many problems that are plague modern apps. Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
 
-- [x]  A brief rant about “plain-text” data formats
-- [ ]  Link to Andy’s tweet about n-to-n problems in APIs?
+[ ]  Link to Andy’s tweet about n-to-n problems in APIs?
 
 ### The difference between “UI data” and “domain data” is quantitative, not qualitative.
 
-Traditional applications, especially web apps, tend to draw a sharp distinction between non-persistent “UI data” and persistent “domain data”: the former are ephemeral and stored only in the browser’s VM, while the latter are persisted to a backend database. Shifting a piece of state from one to the other requires largely re-architecting the application: for example, very few applications preserve scroll state the way that apps like Twitter do.
+Traditional applications, especially web apps, tend to draw a sharp distinction between non-persistent “UI data” and persistent “domain data”: the former are ephemeral and stored only in the browser’s VM, while the latter are persisted to a backend database. Shifting a piece of state from one to the other requires largely re-architecting the application: for example, very few web applications will preserve UI properties like the sort order of a list or the contents of a search box.
+We found that this distinction can be quite fluid in practice: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time.
+We found it quite nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model.
+While we didn’t tackle multi-device synchronization in this project, we see sync the same way: it’s should probably be more like a checkbox on a piece of state than a key modeling concern.
 
-Our experiments suggest that this difference is actually quite fluid: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time. We found it quite nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model. While we didn’t tackle multi-device synchronization in this project, we see sync the same way: it’s more like a checkbox on a piece of state than a key modeling concern.
+A key worry that we had early on is that the database would be too slow to unify state in this way, and we'd have to introduce various tricks to avoiding persisting every write to disk.
+It turns out that even a simple database like SQLite is quite good at keeping commonly-modified pages in memory, and modern disks are fast enough that we didn't necessarily need to avoid flushing to disk, either
+We were also frequently (and unexpectedly) delighted by the persistent-by-default UI state.
+In most apps, closing a window is a profoundly destructive operation that feels fundamentally unsafe.
+In contrast, we found ourselves delighted to restart the app and find ourselves looking at the same playlist that we were looking at before; it made closing or otherwise "losing" the window feel much safer to us as end-users.
+
+Admittedly, this persistence was also frustrating to us as developers at times: the old trick of "turn it off and back on again" didn't work nearly as well when the buggy UI state persisted between runs.
+We often found ourselves digging through the database to delete the offdending rows, although that too struck an interesting chord.
+By persisting all state by default, we can decouple _restarting the app_ from _resetting the state_.
+Since the system is entirely reactive, we could even reset the UI state without closing the app.
+
+### Migrations are a fundamental challenge, and existing tooling makes them painful.
+
+In our experience, migrations are a consistent pain when working with SQL databases.
+However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
+In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the progrma is re-run.
+Our prototype stores all state, including ephemeral UI state that would normally live exclusivley in the main object graph, in the database, so any change to the layout of that ephermeral state forced a migration.
+In most cases, we chose to simply delete the relevant tables and recreate them.
+
+Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
+We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
 ### SQL is powerful and familiar, not a good language all types of data.
 
@@ -489,30 +519,32 @@ Nonetheless, SQL was a consistent thorn in our side during this project. The def
 
 We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. However, we think that SQL is mostly not a good fit for a general relational language for building apps.
 
-- [ ]  Talk about the alternative history?
+### Building a reactive query system using existing tools is full of technical challenges.
+
+In principle, declarative queries should be a step towards good app perforamnce by default: there need not be a strong coupling bewteen the way that data transformations are described and how they are executed. 
+The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application.
+Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
+
+We largely did not achieve this vision in practice.
+Interestingly, we had only a few problems with slow queries: even when running in the browser using WebAssembly, SQLite is fast enough that most queries with a few joins over a few tens of thousands of rows complete in less than a millisecond.
+When we did hit query performance problems, we usually traced them to the limitations of SQLite's [relatively simple query optimizer](https://www.sqlite.org/optoverview.html).
+For example, SQLite's optimizer does not optimize across subquery boundaries, but we made extensive use of subqueries to logically decompose our query graph.
+
+In one experiment, we replaced SQLite with [DuckDB](https://duckdb.org/), a relatively young embedded database focussed on analytical query workloads and built using a [state-of-the-art optimizer architecture](https://duckdb.org/why_duckdb#standing-on-the-shoulders-of-giants).
+We saw the runtimes of several slow queries drop by a factor of 20, although we also hit problems where DuckDB's optimizer was missing optimizations that we needed.
+
+Outside of the database proper, we encountered a host of technical challenges in making a reactive query system using existing frontend web development tools.
+For example, we initially handled queries asychronously in a web worker, but found that that imposed inter-process communication latencies of up to 5 milliseconds.
+We traced this to basic properties of the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model), and eventually moved the query engine entirely into the UI thread for better performance.
+
+We also hit many subtle problems while interfacing with React.
+TK Geoffrey to write something about hooks
 
 ## Towards a reactive, relational approach to state management
 
 Our early investigations suggest that a local-first, data-centric architecture radically simplifies some parts of app development.
 We also know that it is at least somewhat practical: we've managed to build a real app that works with moderate amounts of data and has good performance.
 These experiments make us particularly excited about the transferability of insights and technologies from the database reserach community to the domain of app development.
-
-### Component trees a queries
-
-This version or Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
-Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
-
-[TK insert picture]
-
-In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
-So, we could view the queries and template together as a large, tree-structured view of the data.
-
-We can extend this perspective even further: each component takes some arguments (props, in React parlance), which might themselves be queries, but are also a pure function of the data.
-We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
-This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
-
-This perspective is a nice lens for understanding how Riffle works, but we have found that it is not an especially useful one when actually building an app in our prototype framework.
-For now, our tools feel mostly like a set of unusual extensions to React, in large part because of the awkwardness of switching between SQL and JavaScript, neither of which is a compelling langauge for expressing these kinds of declarative, tree-structured queries.
 
 ### Taking "everything is a query" even further
 
@@ -544,7 +576,7 @@ There are some benefits from _stack compression_, where what were previously a s
 However, we think that the primary benefit of this uniformity comes from the ability to more easily _reason across the layers of the stack_.
 
 For example, let's consider performance.
-User-facing apps face performance challenges that don't show up in other types of programs, especially when it comes to _latency_. Users are [exquisitely sensitive](TK link) to even small amounts of latency, and we believe that low latency is a key property of the types of creative tools that we're excited about.
+User-facing apps face performance challenges that don't show up in other types of programs, especially when it comes to _latency_. Users are [exquisitely](https://www.inkandswitch.com/slow-software/) [sensitive](https://danluu.com/input-lag/) to even small amounts of latency, and we believe that low latency is a key property of the types of creative tools that we're excited about.
 A key challenge in building performant apps is performing _incremental updates_: it's often much easier to describe how to build the UI from scratch than to figure out how it must update in response to a new event, but it's often too expensive to rebuild the UI from scratch every frame as in immediate-mode GUI tools.
 Indeed, a key lesson from React and other virtual DOM-based tools is finding a way to automatically transform a build-from-scratch description of the UI into an incremental one.
 
@@ -558,7 +590,7 @@ Many systems for incremental maintenance work by tracking data _provnenance_: th
 We believe that understanding data provenance is also a fundamental tool in understanding app behaviour, for both app developers trying to debug the app and end users who are trying to extend it.
 
 Imagine a browser-style developer console that allows you to click on a UI element and see what component it was generated from. In a system with end-to-end provenance, we could identify how this element came to be in a much deeper way, answering questions not just questions like "what component template generated this element?" but "what query results caused that component to be included?" and even "what event caused those query results to look this way?".
-We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](TK link), where any piece of an app can be inspected to determine _why_ it's in that state.
+We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](https://www.cs.cmu.edu/~NatProg/whyline.html), where any piece of an app can be inspected to determine _why_ it's in that state.
 
 ### Where we're going
 
