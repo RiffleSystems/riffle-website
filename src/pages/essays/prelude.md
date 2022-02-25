@@ -18,7 +18,7 @@ draft: false
 description:
 ---
 
-<div style="color: red; font-weight: bold;">Private draft for feedback, please don't share!</div>
+<div style="color: red; font-weight: bold;">This is a private draft, please don't share widely. Thanks for reading!</div>
 
 Modern web applications are complicated to build because they have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
