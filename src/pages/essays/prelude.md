@@ -131,13 +131,13 @@ It would still be useful to configure state along various dimensions: persistenc
 
 ## Our prototype system
 
-
-
 - *Goal: prototype the experience of building an app in this style, learn about the problem*
 - *important: this is not the final thing! and it's nowhere close to a product*
 - Browser app: React + SQL.js + absurd-sql
 - Tauri app: browser UI + Sqlite-native
 - Our prototype: reactive graph around SQLite, + React hooks. Let's see by example.
+
+![](/assets/blog/prelude/prototype.png)
 
 In this section, we’ll concretely demonstrate our prototype system by showing how to use it to build a simplified iTunes-style music player. In the process, we’ll show how the relational, reactive, and universal approach to state makes it easier to develop an application that empowers the end user.
 
@@ -196,6 +196,10 @@ One downside of SQL here is that the join syntax is verbose; in a language like 
 
 Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data:
 
+![](/assets/blog/prelude/component-1.png)
+
+As actual React code, it looks something like this:
+
 ```jsx
 import { db, useQuery } from 'riffle'
 
@@ -233,15 +237,13 @@ const TrackList = () => {
 }
 ```
 
-*todo: screenshot of a list of tracks*
-
 <aside>
 Our prototype implements the most naive reactivity approach: re-running all reactive queries any time the contents of the database change. This still turns out to be pretty fast because SQLite can run many common queries very fast. In general, this is an instance of the problem of incremental view maintenance [cite] and we plan to explore far more efficient strategies for keeping these queries updated.
 </aside>
 
 Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
 
-**todo: add animated screenshot?**
+**todo: add animated screenshot**
 
 ### Sorting tracks
 
@@ -294,11 +296,9 @@ Next, we need to actually use this state to sort the tracks. We can interpolate 
 
 ```jsx
 // Define SQL query for tracks list
-const tracksQuery = db.query((get) => sql`
-select
-  tracks.name as name,
-	...
-from tracks
+const sortedTracks = db.query((get) => sql`
+select *
+from (${get(tracksQuery.queryString)})
   left outer join albums on tracks.album_id = albums.id
   order by ${get(state.sortProperty)} ${get(state.sortOrder)}
 `)
@@ -306,7 +306,7 @@ from tracks
 
 This establishes a new reactive dependency. Up until now, the query string was hardcoded, and it would only reactively update when the database contents changed. Now, the query string itself depends on the local component state. Riffle’s reactivity system ensures that queries run in a correct dependency order—if the sort property changes, the query for that property must run before its result can be used in the tracks query.
 
-![](/assets/blog/prelude/reactive-queries-1.jpeg)
+![](/assets/blog/prelude/component-2.png)
 
 Now when we click the table headers, we see the table reactively update!
 
@@ -353,7 +353,7 @@ const filteredTracks = db.query((get) => {
 
 Revisiting our graph of dependent queries, there’s now a new layer:
 
-![](/assets/blog/prelude/reactive-queries-2.jpeg)
+![](/assets/blog/prelude/component-3.png)
 
 Now, when the user types into the search box, their search term appears and filters the list of tracks:
 
@@ -364,8 +364,6 @@ Interestingly, because we’re using a controlled component, every keystroke the
 It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run many queries fast enough to make this approach work, although we still plan to develop more asynchronous approaches for handling slower queries.
 
 ### Virtualized list rendering
-
-![CleanShot 2022-02-15 at 16.55.34@2x.png](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/3e9ec289-dbf3-4c3b-ba6c-02736128a91c/CleanShot_2022-02-15_at_16.55.342x.png)
 
 Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below. With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code.
 
@@ -403,8 +401,6 @@ const filteredPagedTracks = db.query(() => {
 ```
 
 This introduces yet another layer to our reactive query graph. Once again, by explicitly representing all these dependencies in Riffle, we gain two key advantages: the runtime can efficiently schedule incremental updates through the graph, and the user can inspect and understand the structure of the computation.
-
-![IMG_0549.jpg](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e9aaf1be-36a9-49e6-b3de-2369f7c5e1fb/IMG_0549.jpg)
 
 This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a collection of 250k+ tracks. Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view. The local-first architecture has enabled a much simpler approach.
 
