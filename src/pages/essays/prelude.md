@@ -408,6 +408,7 @@ briefly mention Spotify daemon
 ### Building a complex app
 
 - How does this scale up to a complex app?
+- show component tree diagram // sources/sinks
 - We're actually building a full-featured music app, MyTunes! (screenshot)
 - Challenges:
   - React reactivity
