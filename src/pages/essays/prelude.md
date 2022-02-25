@@ -586,8 +586,9 @@ However, we see the outline of an appraoch where _user interfaces are expressed 
 Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
 We're excited by this potential, and even more excited by the possiblity that we might already have the basic technological pieces to make that vision a reality.
 
-If you'd like to follow our work, consider subscribing for udpates:
-We'd love your feedback: we're on Twitter and email.
+If you'd like to follow our work, consider subscribing for updates:
+
+We'd love your feedback: we're reachable by email at [feedback@riffle.systems](mailto:feedback@riffle.systems) and on Twitter at [@geoffreylitt](https://twitter.com/geoffreylitt) and [@nschiefer](https://twitter.com/nschiefer)!
 
 *Thanks to TK, TK, TK for feedback*
 
