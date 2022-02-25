@@ -598,7 +598,10 @@ We're excited by this potential, and even more excited by the possiblity that we
 
 We'd love your feedback: we're reachable by email at [feedback@riffle.systems](mailto:feedback@riffle.systems) and on Twitter at [@geoffreylitt](https://twitter.com/geoffreylitt) and [@nschiefer](https://twitter.com/nschiefer)!
 
-*Thanks to TK, TK, TK for feedback*
+*We thank TK, TK, TK for feedback on drafts of this essay.
+We're grateful for clarifying conversations with Jamie Brandon, Adam Jermyn, David Karger, Kevin Lynagh, and Jalex Stark as we developed the ideas in this essay.
+Geoffrey Litt was supported by an NSF GRFP Fellowship.
+Nicholas Schiefer was supported by a Simons Investigator Award.*
 
 ---
 
