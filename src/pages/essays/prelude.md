@@ -76,17 +76,23 @@ In a local-first application, this doesn't need to be the case; all the queries 
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
 
-This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). It's not a common approach to managing state in client-side web development, although there have been successful projects in this area, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser (and more recently, the [absurd-sql](https://jlongster.com/future-sql-web) project which persists a SQL.js database using IndexedDB). We think relational queries in the client UI is a pattern that deserves to be more widely used.
+This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). 
+It's not a common approach to managing state in client-side web development, although there have been successful projects in this area, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser (and more recently, the [absurd-sql](https://jlongster.com/future-sql-web) project which persists a SQL.js database using IndexedDB).
+In many ways, powerful end-user focussed tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
+We think relational queries in the client UI is a pattern that deserves to be more widely used.
 
 ### Fast reactive queries provide a clean mental model
 
 ![](/assets/blog/prelude/reactive.png)
 
-A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. React has popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
+A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. Frameworks like [React](https://reactjs.org/), [Svelte](https://svelte.dev/), and [Solid]() have popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
 In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated.
+
+This appraoch is closely related to the _document functional reactive programming (FRP)_ introduced in [Pushpin](https://www.inkandswitch.com/pushpin/), except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
+We can also [create reactive derived values from our data outside of the tree of UI elements](https://www.youtube.com/watch?v=_ISAA_Jt9kI), as in systems like [Jotai](https://jotai.org/), [Recoil](https://recoiljs.org/), and [RxJS](https://rxjs.dev/)
 
 <aside>
 <p>
@@ -107,7 +113,7 @@ We hypothesize three key sources of this mistaken intuition:
 
 Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
-This performance budget is ambitious, but there are reasons to believe it's achievable if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
+This performance budget is ambitious, but there are reasons to believe it's achievable if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [Noria](https://github.com/mit-pdos/noria), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
 
 ### Managing all state in one system provides greater flexibility
 
@@ -117,7 +123,17 @@ Traditionally, ephemeral "UI state," like the content of a text input box, is tr
 
 With a fast database close at hand, this split doesn't necessarily need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
-It would still be essential to configure state along various dimensions: persistence, sharing across users, etc. But in a unified system, these could just be lightweight checkboxes, not entirely different systems. This would make it easy to decide to persist some UI state, like the currently active tab in an app. UI state could even be shared among clients—in real-time collaborative applications, it's often useful to share cursor position, live per-character text contents, and other state that was traditionally relegated to local UI state.
+It would still be essential to configure state along various dimensions: persistence, sharing across users, etc.
+But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
+This would make it easy to decide to persist some UI state, like the currently active tab in an app. UI state could even be shared among clients—in real-time collaborative applications, it's often useful to share cursor position, live per-character text contents, and other state that was traditionally relegated to local UI state.
+
+TK related work to weave in
+- Elm architecture
+- Redux
+- **Cloud Full-stack reactivity**
+    - Meteor
+    - Firebase
+
 
 ## Our prototype system
 
@@ -446,6 +462,8 @@ We can extend this perspective even further: each component takes some arguments
 We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
 This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
+This perspective ends up looking a lot like [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/), a relational langauge for defining UIs: the app is _defined_ as query over the data, with results that define the UI elements on the screen.
+
 In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
@@ -504,6 +522,8 @@ Nonetheless, SQL was a consistent thorn in our side during this project. The def
 3. SQL’s scalar expression language is weird and limited. Often, we wanted to factor out a scalar expression for re-use, but doing this in SQLite was annoying enough that we didn’t do it often.
 
 We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. Better relational languages could make UI development more ergonomic and avoid the need for clumsy ORM layers. Also, the prospect of replacing SQL seems more realistic in a domain like frontend UI where SQL hasn't yet taken hold in the first place.
+
+While we tried to stick to well-known technologies like SQL in our prototype, we are excited about the potential of newer relational languages like [Imp](https://github.com/jamii/imp/tree/v1) and Datalog.
 
 ### Performance is a challenge when integrating with existing web tools
 
@@ -568,6 +588,7 @@ In the past twenty years, researchers in the programming languages and database 
 Many of these techniques are attempts to solve the _incremental view maintenance_ problem for relational databases, where a view of the data is dynamically maintained as new writes occur.
 
 If the UI can be expressed in a way that is friendly to one of these automated incremental maintenance, perhaps as a declarative view of the data, we might be able to express user interfaces in a declarative, build-from-scratch way but obtain the perfromance benefits of incremental updates.
+Other efforts in this space, like the [Incremental](https://opensource.janestreet.com/incremental/) and [inc-dom](https://www.janestreet.com/tech-talks/intro-to-incr-dom/) libraries, have shown considerable success in these directions.
 
 While this seems like a purely technical benefit, we also believe that there are conceptual advantages to uniformity in the user interface stack.
 Many systems for incremental maintenance work by tracking data _provnenance_: they remember where a particular computation got its inputs, so that it knows when that computation needs to be re-run.
@@ -576,12 +597,38 @@ We believe that understanding data provenance is also a fundamental tool in unde
 Imagine a browser-style developer console that allows you to click on a UI element and see what component it was generated from. In a system with end-to-end provenance, we could identify how this element came to be in a much deeper way, answering questions not just questions like "what component template generated this element?" but "what query results caused that component to be included?" and even "what event caused those query results to look this way?".
 We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](https://www.cs.cmu.edu/~NatProg/whyline.html), where any piece of an app can be inspected to determine _why_ it's in that state.
 
+### End user programming through better abstractions
+
+We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers.
+Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
+
+Riffle attacks the problem from a different direction: instead of aiming at extremely simple use cases, it starts by trying to express the full power of a relational model to experienced developers.
+We hope that these new abstractions can build a solid foundation on which higher-level tools can be built for end-users.
+
+Put another way: you can’t use Airtable to write iTunes, but we’ve been able to use Riffle to make myTunes.
+
 ### Where we're going
 
 We started this project wondering how the local-first availability of an app's data could change and simplify app development.
 At this point, we're left with more questions than answers.
 However, we see the outline of an appraoch where _user interfaces are expressed as queries_, those queries are executed by a fast, performant incremental maintenance system, and that incremental maintenance gives us _detailed data provnenace_ throughout the system.
 Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
+
+<aside>
+Airtable is by far the most polished expression of the relational model in a tool aimed at end users.
+In our experience, users with no technical background besides computer office skills can be highly productive in Airtable after just a few months.
+Nonetheless, Airtable has some significant limitations, which give it the sort of ceiling that we are worried about:
+
+1. Its query facilities are limited to what can be expressed in the view UI, and these don't come close to expressing the full power of relational queries. For instance, it doesn't support general joins, or even nested filter predicates.
+2. Its performance degrades rapidly when a single database ("base", in Airtable terminology) approaches the kinds of medium-sized data sets that we are most interested in. As a result, Airtable has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
+
+</aside>
+
+We find a lot of inspiration from tools like spreadsheets, arguably the origin of the reactive programming model, and Airtable, which draws inspiration from the relational model.
+These tools are highly productive in their domains; in our experience, they are _more productive_ than traditional developer tools even for skilled software engineers.
+Nonetheless, they have significant technical and conceptual limitations; you can't use Airtable to write iTunes.
+We hope that by taking a step back and developing some key abstractions, we can achieve the full expressive power of "general purpose" programming tools and simplify them dramatically, for experts and novices alike.
+
 We're excited by this potential, and even more excited by the possiblity that we might already have the basic technological pieces to make that vision a reality.
 
 ---
@@ -595,67 +642,3 @@ Geoffrey Litt was supported by an NSF GRFP Fellowship.
 Nicholas Schiefer was supported by a Simons Investigator Award.*
 
 ---
-
-_related work section will probably be removed from this draft_
-
-## Related Work
-
-How is this different from?
-
-There is a rich, emerging landscape of tools that help app developers manage state. Here’s how we see Riffle in this landscape, using loose clusters and non-exhaustive lists of prior work:
-
-### Local-first CRDT-based state managers
-
-There is an emerging class of CRDT-based state management tools for building local-first software, including Automerge and Yjs. These expose a data structure with general-purpose semantics that handles the complexity of distributed, real-time sync. This has also been exposed in real-world applications, including Actual Budget, which implements CRDT-style sync between SQLite databases.
-
-Because of the amount of excellent prior work in this space, we have deliberately ignored the question of sync for now. In the short term, we imagine adding sync to our databases using OR-set semantics [CITE], in the style of James Long’s implementation for Actual Budget.
-
-While we share the goal of promoting powerful, local-first software, Riffle is designed to be less of a drop-in persistent state management tool and more of a totalizing, end-to-end manager for all application state. In particular, the reactive relational queries at the heart of Riffle lie outside of the domain of concern for CRDT libraries. This more structured approach to app development allows unique features like our data-centric debugging UI.
-
-- **Local-first CRDT-based state managers**
-    - Actual Budget, Automerge / Yjs, Braid
-    - lots of shared goals
-    - We’re focussed on deriving things from data, not how the data are stored
-    - difference: more focus on queries, data constraints, debugging UI itself
-
-### Cloud-based full-stack reactivity
-
-@Geoffrey Litt to write, I don’t know anything about this space.
-
-- **Cloud Full-stack reactivity**
-    - Meteor
-    - Firebase
-
-
-### Relational end-user programming tools
-
-We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers. Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
-Nonetheless, Airtable has some significant limitations: its query facilities are limited by what can be expressed in its view UI, and it doesn't come close to expressing the full power of relational queries: it doesn't support general joins, or even nested and/or predicates.
-It also has some notable technical limitations, like the 50,000 record-per-base limit, that prevent it from handling even modest amounts of data.
-
-Riffle attacks the problem from a different direction: instead of aiming at extremely simple use cases, it starts by trying to express the full power of a relational model to experienced developers.
-We hope that these new abstractions can build a solid foundation on which higher-level tools can be built for end-users.
-
-Put another way: you can’t use Airtable to write iTunes, but we’ve been able to use Riffle to make myTunes.
-
-### Relational tree languages
-
-There are several other attempts at extending the relational model to produce tree-structured results like a DOM.
-Most notably, Jamie Brandon's [Imp](TK link) project constitutes several takes on relational langauges for definin UIs.
-Our project is highly aligned iwth the vision of Imp; the biggest difference is that we have been less willing to throw away existing tools entirely and more eager to make use them, in order to get feedback from real use cases, like myTunes.
-
-    - GraphQL
-
-### Reactive UI state frameworks
-
-- Reactive state management for React.js: Recoil, Jotai
-- Alternate frameworks: SolidJS, Svelte
-- Spreadsheets
-- Jane St Incremental + incr-dom
-- Incremental computation, including incremental SQL
-    - Jane St Incremental
-    - Incremental view maintenance systems
-    - Differential Dataflow + Materialize
-    - Differential Datalog
-    - Noria (MIT project)
-    - SQLive
