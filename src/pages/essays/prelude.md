@@ -459,7 +459,7 @@ Since our queries are tightly bound to UI components, being able to look at the 
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
 
 It's interesting to compare this set-wise debugging from debuggers in imperative programs.
-Nearly all imperative debuggers work _point-wise_: we can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
+Imperative debuggers can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
 The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
 ### Users and developers benefit from combining “UI data” and "app data”
@@ -489,7 +489,7 @@ This problem is reminiscent of some of the challenges of Smalltalk images, where
 
 In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the program is re-run.
 Our prototype stores all state, including ephemeral UI state that would normally live exclusivley in the main object graph, in the database, so any change to the layout of that ephermeral state forced a migration.
-In most cases, we chose to simply delete the relevant tables and recreate them.
+In most cases, we chose to simply delete the relevant tables and recreate them while in development, which essentially recreates the traditional workflow with ephemeral state.
 
 Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
 We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
