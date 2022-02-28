@@ -415,7 +415,7 @@ It's unusual to send user input through the database before showing it on the sc
 
 ### Selection state in the database
 
-As another example of the speed that this approach can achieve—we can store the currently selected track state in the database. The system is responsive enough to make selection feel perfectly responsive, even though it's roundtripping through the database every time the selection changes:
+As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's roundtripping through the database every time the selection changes:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/selection.mp4" playsinline="" />
 
@@ -447,8 +447,8 @@ Then, we can write a reactive database query that uses this scroll index state a
 const PAGE_SIZE = 40 // size of one page in the UI
 const PAGE_BUFFER = 100 // extra rows to load on either side
 
-const filteredPagedTracks = db.query(() => {
-  const startIx = parseInt(state.scrollIndex()) - PAGE_BUFFER
+const filteredPagedTracks = db.query((get) => {
+  const startIx = parseInt(get(state.scrollIndex)) - PAGE_BUFFER
   return sql`
     select * from ${filteredTracks} as tracks
     limit ${PAGE_SIZE + (2 * PAGE_BUFFER)} offset ${startIx}
