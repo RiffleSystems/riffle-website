@@ -477,9 +477,7 @@ However, these imperative calls are tricky: for example, they implicitly depend 
 Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
 When the user performs an action, we write that action to the database as an event, which is then synced by a background daeomon using the imperative Spotify APIs.
 Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
-We discuss this unconventional approach to application interop [below](#data-based-interoperability-offers-advantages-over-action-based-apis).
-
-TK add picture?
+We discuss this unconventional approach to interoperability [below](#data-based-interoperability-offers-advantages-over-action-based-apis).
 
 ### Building a complex app?
 
