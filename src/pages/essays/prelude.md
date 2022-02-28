@@ -473,6 +473,8 @@ When the user performs an action, we write that action to the database as an eve
 Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
 We discuss this unconventional approach to application interop [below](#data-based-interoperability-offers-advantages-over-action-based-apis)
 
+TK add picture?
+
 ### Building a complex app?
 
 So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more.
