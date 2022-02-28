@@ -101,7 +101,14 @@ We started our project with some specific design principles we thought could sim
 
 ### Declarative queries clarify application structure
 
-![](/assets/blog/prelude/declarative.png)
+<figure>
+  <img src="/assets/blog/prelude/declarative.png" />
+  <figcaption>
+    <Markdown>
+      Testing a caption
+    </Markdown>
+  </figcaption>
+</figure>
 
 Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, in a music app, if a list of tracks and albums is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 

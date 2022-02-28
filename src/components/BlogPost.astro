@@ -134,6 +134,14 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     position: relative;
   }
 
+  .content :global(figcaption) {
+    font-size: 0.9rem;
+    margin-top: -5px;
+    background-color: #f5f4f0;
+    padding: 10px;
+    border-top: dashed thin #e2decf;
+  }
+
   header {
     display: flex;
     flex-direction: column;
