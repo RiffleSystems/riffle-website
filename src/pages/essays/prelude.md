@@ -29,7 +29,7 @@ description:
 
   <p>Our key idea is to use a local-first architecture that puts the data on the client, and to take full advantage of local data availability to support new UI development patterns. We propose managing all application and UI state in a local <em>reactive relational</em> database, which provides a clearly structured model for reasoning about dataflow.</p>
 
-  <p>We've built an early prototype of this idea as a React state management library built on top of SQLite. In this essay, we describe what we've learned so far from using this prototype, and sketch a path towards a simpler paradigm for building stateful apps.</p>
+  <p>We've built an early prototype: a reactive query layer over SQLite, integrated with React for rendering. In this essay, we describe what we've learned so far from using this prototype, and sketch a path towards a simpler paradigm for building stateful apps.</p>
 </Abstract>
 
 ## Introduction
@@ -109,20 +109,13 @@ This appraoch is closely related to the _document functional reactive programmin
 We can also [create reactive derived values from our data outside of the tree of UI elements](https://www.youtube.com/watch?v=_ISAA_Jt9kI), as in systems like [Jotai](https://jotai.org/), [Recoil](https://recoiljs.org/), and [RxJS](https://rxjs.dev/)
 
 <aside>
-<p>
-As we discussed our ideas with working app developers, we found that many people who work with databases in a web context has an intuition that <em>databases are slow</em>.
-</p>
+<Markdown>
 
-<p>
-This is striking because even primitive databases like SQLite are fast on modern hardware: many of the queries in our demo app run in a few hundred <em>microseconds</em> on a few-years-old laptop, much faster than even rudimentary DOM manipulations.
-<p>
+As we discussed our ideas with working app developers, we found that many people who work with databases in a web context has an intuition that _databases are slow_.
+This is striking because even primitive databases like SQLite are fast on modern hardware: many of the queries in our demo app run in a few hundred _microseconds_ on a few-years-old laptop.
 
-<p>
-We hypothesize three key sources of this mistaken intuition:
-</p>
-1. Developers are used to interacting with databases over the network, where network latencies apply.
-2. Developer intuitions about database performance were developed when hardware was much slower. Back in the days of spinning hard drives and 8 MB of RAM, a single disk seek could take many milliseconds. Modern hardware is astoundingly fast, and many more datasets fit into main memory even on mobile devices.
-3. Many relational database management systems aren't built for low latency. For example, many databases are built for analytics workloads on large data sets, where small amounts of latency are irrelevant to overall performance.
+We hypothesize this is because developers are used to interacting with databases over the network, where network latencies apply. Also, developer intuitions about database performance were developed when hardware was much slower—modern storage is fast, and many often datasets fit into main memory even on mobile devices. Finally, many relational database management systems aren't built for low latency—many databases are built for analytics workloads on large data sets, where a bit of extra latency is irrelevant to overall performance.
+</Markdown>
 </aside>
 
 Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
@@ -135,7 +128,7 @@ This performance budget is ambitious, but there are reasons to believe it's achi
 
 Traditionally, ephemeral "UI state," like the content of a text input box, is treated as separate from "application state" like the list of tracks in a music collection. One reason for this is performance characteristics—it would be impractical to have a text input box depend on a network roundtrip, or even blocking on a disk write.
 
-With a fast database close at hand, this split doesn't necessarily need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
+With a fast database close at hand, this split doesn't need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
 It would still be essential to configure state along various dimensions: persistence, sharing across users, etc.
 But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
@@ -151,13 +144,13 @@ TK related work to weave in
 
 ## Prototype system: SQLite + React
 
-We've built an initial prototype of the Riffle system as a state manager for web browser apps.
-
-For this prototype, our goal was to explore possible developer experiences when working with local data, rather than build an entire polished system. As such, we reused existing tools whenever possible. We also substantially reduced scope by building a _local-only_ prototype which doesn't do any multi-device sync yet. Of course, sync will be a critical part of making this work useful for collaboration in the future; more on that in future essays.
-
 ![](/assets/blog/prelude/prototype.png)
 
-The prototype is a reactive query layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. To run apps fully in the browser (pictured above), we run the SQLite database in a browser web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). To build desktop apps, we build the frontend UI in [Tauri](https://tauri.studio/) and run SQLite in a native process, persisting the device filesystem. For rendering, we use React, which interacts with Riffle via custom hooks.
+We built an initial prototype of Riffle: a state manager for web browser apps, implemented as a reactive layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. For rendering, we use React, which interacts with Riffle via custom hooks.
+
+To run apps in the browser (pictured above), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
+
+For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already a [solved problem](https://archive.jlongster.com/using-crdts-in-the-wild) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
 
 In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -254,13 +247,13 @@ We can also represent this component visually. Currently it contains a single SQ
 
 ![](/assets/blog/prelude/component-1.png)
 
-<aside>
-Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms. In the future, we plan to use incremental view maintenance to keep queries maintained more efficiently.
-</aside>
-
 The UI looks like this:
 
 ![](/assets/blog/prelude/tracklist.png)
+
+<aside>
+Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms. In the future, we plan to use incremental view maintenance to keep queries maintained more efficiently.
+</aside>
 
 Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
 
@@ -335,7 +328,7 @@ Now when we click the table headers, we see the table reactively update!
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
 
-What have we gained by taking the Riffle approach here?
+Of course, this is functionality that would be easy enough to build in a normal React app. What have we actually gained by taking the Riffle approach here?
 
 First, it's **simpler to understand** what's going on in the system, because the system has structured dataflow at runtime which exposes the provenance of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
 
@@ -386,7 +379,7 @@ Now, when the user types into the search box, their search term appears and filt
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
-It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run many queries fast enough to make this approach work, although we still plan to develop more asynchronous approaches for handling slower queries.
+It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later on Findings we discuss what to do about the cases where it's not fast enough.)
 
 ### Building virtualized list rendering from scratch
 
@@ -449,15 +442,18 @@ So far, it appears that the basic model is viable, but much work remains to make
 
 Overall, working with our prototype system made us optimistic that this is a promising direction for simplifying application development. At the same time, it also clarified some of the challenges to making this approach truly work. Here are some of our reflections.
 
-### Relational queries enable qualitatively different ways to understand programs.
+### Relational queries make it easier to understand running programs
 
 We began with the observation that a lot of program complexity comes from managing state and propogating state changes, and that declarative quries are a natural, ergonomic way to express those data transformations.
-We hypothesized that this could make apps much easier to develop.
-Although SQL is declarative, we found that expressing data transformations in SQL was not always especially easy for the app developer to interpet _statically_.
-For one, SQL is not an especially ergonomic language for many of the transformations that an app developer needs, especially those that involve returning nested data types.
-In addition, few frontend developers are deeply familiar with SQL, and it feels distinctly out-of-place in the middle of a React app.
 
-Nonetheless, relational queries created intriguing opportunities to understand data transformations _dynamically_.
+<aside>
+<Markdown>
+Why was SQL not more helpful for reading code? For one, SQL is not an especially ergonomic language for many of the transformations that an app developer needs, especially those that involve returning nested data types.
+In addition, few frontend developers are deeply familiar with SQL, and it feels distinctly out-of-place in the middle of a React app.
+</Markdown>
+</aside>
+
+In practice, writing data transformations in SQL helped less than we expected from the perspective of _statically_ understanding code, i.e. reading code in a text editor. However, we found that relational queries created intriguing opportunities to understand data transformations _dynamically_ while an app is running.
 As we built our our debugger, we were impressed by how useful it was to inspect entire result sets from queries in our data transformation pipeline.
 Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
@@ -466,7 +462,91 @@ It's interesting to compare this set-wise debugging from debuggers in imperative
 Nearly all imperative debuggers work _point-wise_: we can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
 The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
-### It's interesting to think of an entire app as a declarative query over the app state.
+### Users and developers benefit from combining “UI data” and "app data”
+
+Traditional applications, especially web apps, tend to draw a sharp distinction between non-persistent “UI data” and persistent "app data”: the former are ephemeral and stored only in the browser’s VM, while the latter are persisted to a backend database. Shifting a piece of state from one to the other requires largely re-architecting the application: for example, few web applications will preserve UI properties like the sort order of a list or the contents of a search box.
+
+We found that this distinction can be fluid in practice: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time.
+We found it nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model. We see sync the same way: it’s should be more like a checkbox on a piece of state than a key modeling concern.
+
+We were frequently (and unexpectedly) delighted by the persistent-by-default UI state.
+In most apps, closing a window is a destructive operation, but we found ourselves delighted to restart the app and find ourselves looking at the same playlist that we were looking at before. It made closing or otherwise "losing" the window feel much safer to us as end-users.
+
+Admittedly, this persistence was also frustrating to us as developers at times: restarting the app didn't work as well when the buggy UI state persisted between runs.
+We often found ourselves digging through the database to delete the offending rows.
+This did lead to another observation, though: in this model, we can decouple _restarting the app_ from _resetting the state_. Since the system is entirely reactive, we could reset the UI state completely without closing the app.
+
+### Migrations are a challenge, and existing tooling makes them painful.
+
+In our experience, migrations are a consistent pain when working with SQL databases.
+However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
+
+<aside>
+<Markdown>
+This problem is reminiscent of some of the challenges of Smalltalk images, where code was combined with state snapshots.
+</Markdown>
+</aside>
+
+In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the program is re-run.
+Our prototype stores all state, including ephemeral UI state that would normally live exclusivley in the main object graph, in the database, so any change to the layout of that ephermeral state forced a migration.
+In most cases, we chose to simply delete the relevant tables and recreate them.
+
+Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
+We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
+
+### SQL has shortcomings for UI development
+
+We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
+
+Nonetheless, SQL was a consistent thorn in our side during this project. The deficiencies of SQL are [well-known](https://www.scattered-thoughts.net/writing/against-sql), so we won’t belabour them here. A few key pain points for us were:
+
+<aside>
+<Markdown>
+There are various extensions to SQL that support nesting, but many of them are not that good and the good ones are not widely available.
+</Markdown>
+</aside>
+
+1. Standard SQL doesn’t support nesting, even in the projection step (i.e., what describes the shape of the results). We’re big fans of data normalization, but it’s very convenient to nest data when producing outputs.
+
+2. SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely. In our prototype, we even ended up adding a small GraphQL layer on top of SQL for ergonomic reasons.
+3. SQL’s scalar expression language is weird and limited. Often, we wanted to factor out a scalar expression for re-use, but doing this in SQLite was annoying enough that we didn’t do it often.
+
+We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. Better relational languages could make UI development more ergonomic and avoid the need for clumsy ORM layers. Also, the prospect of replacing SQL seems more realistic in a domain like frontend UI where SQL hasn't yet taken hold in the first place.
+
+While we tried to stick to well-known technologies like SQL in our prototype, we are excited about the potential of newer relational languages like [Imp](https://github.com/jamii/imp/tree/v1) and Datalog.
+
+### Performance is a challenge with existing tools
+
+In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. Even a simple database like SQLite offers tools like indexes to respond to those access patterns; these tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
+
+In practice, our results have been mixed.
+
+<aside>
+<Markdown>
+
+ We've traced slow queries back to the limitations of SQLite's [query optimizer](https://www.sqlite.org/optoverview.html). For example, it doesn't optimize across subquery boundaries, but we made extensive use of subqueries to modularize our queries. Also, it only does simple nested loop joins, which can be slow for joins on large tables. As an experiment, we tried replacing SQLite with [DuckDB](https://duckdb.org/), a newer embedded database focused on analytical query workloads with a [state-of-the-art optimizer](https://duckdb.org/why_duckdb#standing-on-the-shoulders-of-giants). We saw the runtimes of several slow queries drop by a factor of 20, but some other queries got slower because of known limitations in their current optimizer. Ultimately we plan to explore incremental view maintenance techniques so that a typical app very rarely needs to consider slow queries or caching techniques.
+</Markdown>
+</aside>
+
+On the bright side, the core database itself has been mostly fast. Even running in the browser using WebAssembly, SQLite is fast enough that most queries with a few joins over a few tens of thousands of rows complete in less than a millisecond. We've had some limited exceptions, which we've worked around for now by creating materialized views which are recomputed outside of the main synchronous reactive loop.
+
+However, outside of the database proper, we've encountered challenges in making a reactive query system that integrates well with existing frontend web development tools in a performant way.
+
+One challenge has been inter-process communication. When the reactive graph is running in the UI thread and the SQLite database is on a web worker or native process, each query results in an asynchronous call that has to serialize and deserialize data. When trying to run dozens of fast queries within a single animation frame, we've found that this overhead can become a major source of latency. One solution we're exploring is to synchronously run SQLite in the UI thread, and to asynchronously mirror changes to a persistent database.
+
+<aside>
+<Markdown>
+Some React alternatives like [Svelte](https://svelte.dev/) and [SolidJS](https://www.solidjs.com/) take a different approach: tracking fine-grained dependencies (either at compile-time or runtime) rather than diffing a virtual DOM. We think this style of reactivity could be a good fit for a Riffle state management framework built around incremental query maintenance, but for now we've chosen to prototype with React because it's the UI framework we're most familiar with.
+</Markdown>
+</aside>
+
+Another challenge has been integrating with React. In an ideal world, a write would result in Riffle fully atomically updating the query graph in a single pass, and minimally updating all the relevant templates. However, to preserve idiomatic React patterns (like passing component dependencies using props), we've found that it sometimes takes a few passes to respond to an update—a write occurs, Riffle queries update, React renders the UI tree and passes down new props, Riffle queries are updated with new parameters, then React renders the tree again, and so on. We're still finding the best patterns to integrate with React in a fast and unsurprising way.
+
+Rendering to the DOM has also been a source of performance problems. We've seen cases where the data for a playlist of tracks can be loaded in <1ms, but the browser takes hundreds of milliseconds to compute the CSS styles and layout.
+
+We think there are probably reasonable solutions to each of these performance challenges in isolation, but the best solution might be a more integrated one that doesn't build on existing layers like SQlite and React.
+
+### It's useful to model an app as a declarative query over the app state
 
 This version or Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
 Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
@@ -476,11 +556,15 @@ Conceptually, a component is a combination of some queries that implement the da
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
 So, we could view the queries and template together as a large, tree-structured view of the data.
 
+<aside>
+<Markdown>
+This perspective ends up looking a lot like [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/), a relational langauge for defining UIs: the app is _defined_ as query over the data, with results that define the UI elements on the screen.
+</Markdown>
+</aside>
+
 We can extend this perspective even further: each component takes some arguments (props, in React parlance), which might themselves be queries, but are also a pure function of the data.
 We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
 This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
-
-This perspective ends up looking a lot like [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/), a relational langauge for defining UIs: the app is _defined_ as query over the data, with results that define the UI elements on the screen.
 
 In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
@@ -496,71 +580,6 @@ First, we found it very decouple read- and write-paths: the source application c
 Second, <a href="https://twitter.com/andy_matuschak/status/1452438198668328960">verb-based APIs create an unfortunate n-to-n problem</a>: every app needs to know how to call the APIs of every other app. In contrast, data-based interoperability can use the shared data directly: once an app knows how to read a data format, it can read that data regardless of which app produced it.
 
 Third, we found that treating the data format as a core interface for an app solves many problems that are plague modern apps. Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
-
-### The difference between “UI data” and “domain data” is quantitative, not qualitative.
-
-Traditional applications, especially web apps, tend to draw a sharp distinction between non-persistent “UI data” and persistent “domain data”: the former are ephemeral and stored only in the browser’s VM, while the latter are persisted to a backend database. Shifting a piece of state from one to the other requires largely re-architecting the application: for example, very few web applications will preserve UI properties like the sort order of a list or the contents of a search box.
-We found that this distinction can be quite fluid in practice: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time.
-We found it quite nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model.
-While we didn’t tackle multi-device synchronization in this project, we see sync the same way: it’s should probably be more like a checkbox on a piece of state than a key modeling concern.
-
-A key worry that we had early on is that the database would be too slow to unify state in this way, and we'd have to introduce various tricks to avoiding persisting every write to disk.
-It turns out that even a simple database like SQLite is quite good at keeping commonly-modified pages in memory, and modern disks are fast enough that we didn't necessarily need to avoid flushing to disk, either
-We were also frequently (and unexpectedly) delighted by the persistent-by-default UI state.
-In most apps, closing a window is a profoundly destructive operation that feels fundamentally unsafe.
-In contrast, we found ourselves delighted to restart the app and find ourselves looking at the same playlist that we were looking at before; it made closing or otherwise "losing" the window feel much safer to us as end-users.
-
-Admittedly, this persistence was also frustrating to us as developers at times: the old trick of "turn it off and back on again" didn't work nearly as well when the buggy UI state persisted between runs.
-We often found ourselves digging through the database to delete the offdending rows, although that too struck an interesting chord.
-By persisting all state by default, we can decouple _restarting the app_ from _resetting the state_.
-Since the system is entirely reactive, we could even reset the UI state without closing the app.
-
-### Migrations are a fundamental challenge, and existing tooling makes them painful.
-
-In our experience, migrations are a consistent pain when working with SQL databases.
-However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
-In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the progrma is re-run.
-Our prototype stores all state, including ephemeral UI state that would normally live exclusivley in the main object graph, in the database, so any change to the layout of that ephermeral state forced a migration.
-In most cases, we chose to simply delete the relevant tables and recreate them.
-
-Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
-We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
-
-### SQL has shortcomings for UI development
-
-We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
-
-Nonetheless, SQL was a consistent thorn in our side during this project. The deficiencies of SQL are [well-known](https://www.scattered-thoughts.net/writing/against-sql), so we won’t belabour them here. A few key pain points were:
-
-1. Standard SQL doesn’t support nesting, even in the projection step (i.e., what describes the shape of the results). We’re big fans of data normalization, but it’s very convenient to nest data when producing outputs.
-
-    There are various extensions to SQL that support nesting, but many of them are not that good and the good ones are not widely available.
-
-2. SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely. In our prototype, we even ended up adding a small GraphQL layer on top of SQL for ergonomic reasons.
-3. SQL’s scalar expression language is weird and limited. Often, we wanted to factor out a scalar expression for re-use, but doing this in SQLite was annoying enough that we didn’t do it often.
-
-We view these issues as shortcomings of *SQL in particular*, and not the idea of a relational query language in general. Better relational languages could make UI development more ergonomic and avoid the need for clumsy ORM layers. Also, the prospect of replacing SQL seems more realistic in a domain like frontend UI where SQL hasn't yet taken hold in the first place.
-
-While we tried to stick to well-known technologies like SQL in our prototype, we are excited about the potential of newer relational languages like [Imp](https://github.com/jamii/imp/tree/v1) and Datalog.
-
-### Performance is a challenge when integrating with existing web tools
-
-In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. Even a very simple database like SQLite offers a rich suite of tools, like indexes, to respond to those access patterns. Crucially, those tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
-
-In practice, our results have been mixed—the core database itself has been mostly fast, but interfacing with it in a low-latency way has been tricky.
-
-Even when running in the browser using WebAssembly, SQLite is fast enough that most queries with a few joins over a few tens of thousands of rows complete in less than a millisecond.
-We have hit a few cases where queries took hundreds or thousands of milliseconds, usually when joining over multiple large tables. We've generally traced these back to the limitations of SQLite's [relatively simple query optimizer](https://www.sqlite.org/optoverview.html).
-For example, SQLite's optimizer does not optimize across subquery boundaries, but we made extensive use of subqueries to logically decompose our query graph. Also, SQLite only does nested loop joins, and doesn't use some of the advanced join algorithms used by other databases. As an experiment, we tried replacing SQLite with [DuckDB](https://duckdb.org/), a newer embedded database focussed on analytical query workloads and built using a [state-of-the-art optimizer architecture](https://duckdb.org/why_duckdb#standing-on-the-shoulders-of-giants).
-We saw the runtimes of several slow queries drop by a factor of 20, although we also hit other problems where DuckDB's optimizer was missing optimizations that we needed.
-
-However, outside of the database proper, we've encountered challenges in making a reactive query system that integrates well with existing frontend web development tools in a performant way.
-
-One challenge has been the latency of inter-process communication. When the reactive graph is running in the UI thread, but the database itself is on a web worker or native process, each query results in a message containing serialized data. Every query is also an async call from the UI thread, which adds overhead associated with the [browser's event loop](https://html.spec.whatwg.org/multipage/webappapis.html#event-loop-processing-model). When the queries themselves take less than a millisecond to execute, we've found that this IPC overhead can easily exceed the actual query time.
-
-We're exploring a few routes to solve this problem. One is to synchronously run SQLite itself in the UI thread, and to asynchronously mirror changes to a persistent database. This removes overhead, but has the downside that an occasional slow query could block the UI thread. Another route is to find ways to reduce overhead, e.g. by using shared memory with a web worker to reduce serialization time. Finally, moving the Riffle reactive graph itself off the UI thread and colocating it with SQLite would help, but this introduces new challenges: if queries are written inside of component files, they'd need to get compiled or sent to the worker somehow.
-
-Another challenge has been integrating with React. In an ideal world, a write would result in Riffle fully atomically updating its query graph in a single pass, and minimally updating all the relevant templates. However, to preserve idiomatic React patterns (like passing component dependencies using props), we've found that it sometimes takes a few passes to respond to an update—a write occurs, React renders the UI tree, Riffle reacts and updates some queries, then React renders the tree again, and so on. We're still investigating the best patterns to integrate with React in a fast and unsurprising way. We've also looked into other frameworks like Svelte and SolidJS which have a very different approach to reactivity.
 
 ## Towards a reactive, relational approach to state management
 
@@ -620,10 +639,7 @@ We saw an early example of this in our query debugger view, but we believe that 
 <aside>
 Airtable is by far the most polished expression of the relational model in a tool aimed at end users.
 In our experience, users with no technical background besides computer office skills can be highly productive in Airtable after just a few months.
-Nonetheless, Airtable has some significant limitations, which give it the sort of ceiling that we are worried about:
-
-1. Its query facilities are limited to what can be expressed in the view UI, and these don't come close to expressing the full power of relational queries. For instance, it doesn't support general joins, or even nested filter predicates.
-2. Its performance degrades rapidly when a single database ("base", in Airtable terminology) approaches the kinds of medium-sized data sets that we are most interested in. As a result, Airtable has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
+Nonetheless, Airtable has some significant limitations. Its query facilities are limited to what can be expressed in the view UI, and don't come close to expressing the full power of relational queries—for instance, it doesn't support general joins, or even nested filter predicates. Also, its performance degrades rapidly when a single database approaches the kinds of medium-sized data sets that we are most interested in, and it, has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
 
 </aside>
 

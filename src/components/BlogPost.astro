@@ -118,6 +118,22 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     hyphenate-limit-zone: 10%;
   }
 
+  /*
+  Based on Gwern's analysis of the Tufte-CSS side note feature.
+  https://www.gwern.net/Sidenotes#tufte-css
+  */
+  .content :global(aside) {
+    float: right;
+    clear: right;
+    margin-right: -60%;
+    width: 50%;
+    margin-top: 0.3rem;
+    margin-bottom: 0;
+    font-size: 80%;
+    vertical-align: baseline;
+    position: relative;
+  }
+
   header {
     display: flex;
     flex-direction: column;
