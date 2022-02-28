@@ -481,7 +481,7 @@ TK add picture?
 
 ### Building a complex app?
 
-So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more.
+So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more. Here's a preview of what it looks like currently:
 
 ![](/assets/blog/prelude/mytunes.png)
 
@@ -719,8 +719,6 @@ We're excited by this potential, and even more excited by the possiblity that we
 
 We'd love your feedback: we're reachable by email at [feedback@riffle.systems](mailto:feedback@riffle.systems) and on Twitter at [@geoffreylitt](https://twitter.com/geoffreylitt) and [@nschiefer](https://twitter.com/nschiefer)!
 
-*We're grateful for clarifying conversations with Jamie Brandon, Josh Horowitz, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Jalex Stark, and Peter van Hardenberg as we developed the ideas in this essay.
+*We're grateful for helpful feedback from Jamie Brandon, Mike Cafarella, Adam Chlipala, Josh Horowitz, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Sam Madden, Rob Miller, Josh Pollock, Jalex Stark, Michael Stonebraker, Peter van Hardenberg, the MIT Software Design Group, and the MIT Data Systems Group as we developed the ideas in this essay.
 Geoffrey Litt was supported by an NSF GRFP Fellowship.
 Nicholas Schiefer was supported by a Simons Investigator Award.*
-
----
