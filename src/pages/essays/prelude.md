@@ -23,13 +23,11 @@ description:
 <div style="color: red; font-weight: bold;">This is a private draft, please don't share widely. Thanks for reading!</div>
 
 <Abstract>
-  <p>Interactive, collaborative applications are becoming harder to build. The web stack grows ever more complex, and users expect more from their apps.</p>
+  <p>The Riffle project aims to rethink app development in order to make it simpler for developers to create good software, and to enable more people to build and customize their own apps.</p>
 
-  <p>On the Riffle project, we're aiming to rethink app development in order to make it simpler for developers to create good software, and to enable more people to build and customize their own apps.</p>
+  <p>In this essay, we present an initial overview of our approach. Our key idea is to use a local-first architecture where data is located on the client, in order to support new UI development patterns. We propose managing all application and UI state in a local <em>reactive relational</em> database, which provides a clearly structured model for reasoning about dataflow.</p>
 
-  <p>Our key idea is to use a local-first architecture that puts the data on the client, and to take full advantage of local data availability to support new UI development patterns. We propose managing all application and UI state in a local <em>reactive relational</em> database, which provides a clearly structured model for reasoning about dataflow.</p>
-
-  <p>We've built an early prototype: a reactive query layer over SQLite, integrated with React for rendering. In this essay, we describe what we've learned so far from using this prototype, and sketch a path towards a simpler paradigm for building stateful apps.</p>
+  <p>As an early prototype, we've built a reactive query layer over SQLite, integrated with React for rendering. We describe what we've learned so far from using this prototype, and sketch a path towards a simpler paradigm for building stateful apps.</p>
 </Abstract>
 
 ## Introduction
@@ -462,12 +460,9 @@ It's interesting to compare this set-wise debugging from debuggers in imperative
 Imperative debuggers can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
 The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
-### Users and developers benefit from combining “UI data” and "app data”
+### Both users and developers can benefit from a unified approach to UI data and app data
 
-Traditional applications, especially web apps, tend to draw a sharp distinction between non-persistent “UI data” and persistent "app data”: the former are ephemeral and stored only in the browser’s VM, while the latter are persisted to a backend database. Shifting a piece of state from one to the other requires largely re-architecting the application: for example, few web applications will preserve UI properties like the sort order of a list or the contents of a search box.
-
-We found that this distinction can be fluid in practice: it is easy for some data to start out as something ephemeral and slowly accumulate importance over time.
-We found it nice to treat all data, whether ephemeral or persistent, in a uniform way, and think of persistence as a lightweight property of that data, rather than a foundational part of the data model. We see sync the same way: it’s should be more like a checkbox on a piece of state than a key modeling concern.
+We found it nice to treat all data, whether ephemeral "UI data" or persistent "app data", in a uniform way, and to think of persistence as a lightweight property of some data, rather than a foundational part of the data model.
 
 We were frequently (and unexpectedly) delighted by the persistent-by-default UI state.
 In most apps, closing a window is a destructive operation, but we found ourselves delighted to restart the app and find ourselves looking at the same playlist that we were looking at before. It made closing or otherwise "losing" the window feel much safer to us as end-users.
@@ -475,6 +470,8 @@ In most apps, closing a window is a destructive operation, but we found ourselve
 Admittedly, this persistence was also frustrating to us as developers at times: restarting the app didn't work as well when the buggy UI state persisted between runs.
 We often found ourselves digging through the database to delete the offending rows.
 This did lead to another observation, though: in this model, we can decouple _restarting the app_ from _resetting the state_. Since the system is entirely reactive, we could reset the UI state completely without closing the app.
+
+Another challenge was fitting compound UI state like nested objects or sequences into the relational model. For now, we've addressed this challenge by serializing this kind of state into a single scalar value within the relational database. However, this approach feels haphazard, and it seems important to find more ergonomic relational patterns for storing common kinds of UI state.
 
 ### Migrations are a challenge, and existing tooling makes them painful.
 
