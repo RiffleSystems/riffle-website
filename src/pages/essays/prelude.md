@@ -32,38 +32,56 @@ description:
 
 ## Introduction
 
-Modern web applications are complicated to build because they have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
+Today, building interactive apps is hard: so hard that it's a specialized skill even among software developers.
+Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are [disepowered](https://www.geoffreylitt.com/2019/07/29/browser-extensions.html) entirely.
+Like [many](https://www.inkandswitch.com/end-user-programming/), [other](http://worrydream.com/ClimateChange/), [researchers](https://mavo.io/), we'd like to fix this by making app development radically more accessible to experts and novices alike.
+
+<aside>
+
+Here's an interesting thought experiment.
+Many software developers think that it is much easier to build command line tools than GUI apps, or even text-user interface (TUI) apps.
+Why is that?
+
+One answer is that command line tools tend to be _stateless_ in between user commands.
+A user gives the program some instructions, and it executes them, then discards all of the hidden state before returning control to the user.
+In contrast, most apps have some kind of persistent state--often quite a lot--that needs to be maintained and updated as the user takes actions.
+
+</aside>
+
+Our key hypothesis is app development is hard in large part because **managing state is hard**.
+Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
+In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
+In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embededded databases.
+
+In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
+Web apps have many redundant data representations spanning across the backend and frontend: for example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
 ![](/assets/blog/prelude/layers.png)
 
-While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. As a result, app development is a specialized skill set: many skilled programmers like scientists struggle to build web UIs, and even advanced developers invest enormous effort to create performant, reliable apps.
+While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. Even advanced developers invest enormous effort to create performant, reliable apps.
 
-How might we simplify this stack?
+We think that a [local-first](https://www.inkandswitch.com/local-first/) architecture is a promising way to fix this.
+In a local-first app, all data is stored locally on the client, available to be freely read and modified at any time.
+When a network connection is available, changes are synchronized across clients, enabling real-time collaboration when clients are all online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
+While it might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is indeed complicated—-but we think that the local-first architecture creates an opportunity to make app development substantially simpler.
 
-We think a promising direction is a [local-first](https://www.inkandswitch.com/local-first/) architecture, where all data is stored locally on the client, available to be freely read and modified at any time. When a network connection is available, changes are synchronized across clients, enabling real-time collaboration when clients are all online. This architecture benefits end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
+In particular, **local-first allows rich access to application state**.
+After all, the entire app state is available locally with minimal latency.
+With the data close at hand on a client device, we have an opportunity to construct our apps in a differnet way.
+Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
+If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates.
+Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
-It might seem that a local-first architecture would make applications *more complicated* to build—after all, in a traditional cloud architecture, supporting offline mode is indeed complicated—but we think that the local-first architecture can make app development substantially simpler.
-A large amount of effort in a cloud app is concerned with _managing state_: getting the data out of the database, making it available over APIs, and then orchestrating these API calls in just the right way.
-On the client, most web UI technologies have been developed in a context where data is assumed to live far away on a server, and have assumed the associated complexity.
+This insight is not totally novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users, removing traditional server layers. 
 
-Now, the data can instead be immediately close at hand on the client device, enabling different approaches. Could we take more integrated approaches to computing with data that make it easier for developers to build, maintain, and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
-
-This insight is not totally novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users, removing traditional server layers. In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack. Our approach is based on three observations:
-
-**Managing state is hard.** Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propogating state.
-In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
-In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embededded databases.
-In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
-
-**Local-first allows rich access to state.** In the local-first architecture, the entire app state is available locally with minimal latency. We think that this should make state management radically easier.
-If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates. Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
-
-**Databases have many solutions to state problems.** Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
+With immediate access to local data, we think that **databases have many solutions to state problems**.
+Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
 The power of client-side databases is already well-known—many complex desktop and mobile apps (e.g. Adobe Lightroom, Apple Photos and Google Chrome) use the SQLite embedded relational database to manage data.
 We are especially interested in work on better query languages and fast incremental view maintenance, both of which have advanced considerably in recent years.
 However, many of these ideas are implemented only in high-end analytics products, or a system with high latency, or some other piece of technology that is unsuitable for app development.
 We think there are even greater opportunities to apply ideas from database research to app development.
 
+In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
 To start exploring these ideas in practice, we've built an initial prototype: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into opportunities and challenges, which we share in this essay.
 
 ## Principles
