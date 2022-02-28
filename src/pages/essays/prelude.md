@@ -181,7 +181,7 @@ We built an initial prototype of Riffle: a state manager for web browser apps, i
 
 To run apps in the browser (pictured above), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
 
-For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already a [solved problem](https://archive.jlongster.com/using-crdts-in-the-wild) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
+For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already problem others have solved (e.g., James Long's approach in [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild)) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
 
 In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -235,7 +235,7 @@ This query will produce results like this:
 | Started From the Bottom | Nothing Was The Same | Drake |
 | Love Never Felt So Good | XSCAPE | Michael Jackson |
 
-Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data:
+Once we’ve written this query, we’ve already done most of the work for showing this particular UI. We can simply extract the results and use a JSX template in a React component to render the data. Here's a simplified code snippet:
 
 ```jsx
 import { db, useQuery } from 'riffle'
@@ -259,15 +259,11 @@ const TrackList = () => {
 
   return <table>
     <thead>
-      <th>Name</th>
-      <th>Album</th>
-      <th>Artist</th>
+      <th>Name</th><th>Album</th><th>Artist</th>
     </thead>
     <tbody>
       {tracks.map(track => <tr>
-        <td>{track.name}</td>
-        <td>{track.album}</td>
-        <td>{track.artist}</td>
+        <td>{track.name}</td><td>{track.album}</td><td>{track.artist}</td>
       </tr>)}
     </tbody>
   </table>
@@ -331,7 +327,12 @@ const TrackList = () => {
       <th onClick={set.sortProperty("album_name")}>Album></th>
       <th onClick={set.sortProperty("artists")}>Artists</th>
     </thead>
-  //...
+     <tbody>
+        {tracks.map(track => <tr>
+          <td>{track.name}</td><td>{track.album}</td><td>{track.artist}</td>
+        </tr>)}
+      </tbody>
+  </table>
 }
 ```
 
@@ -339,14 +340,13 @@ const TrackList = () => {
 The function that generates our SQL query can use a `get` operator to read other reactive values. This doesn't just read the current value; it creates a reactive dependency.
 </aside>
 
-Next, we need to actually use this state to sort the tracks. We can interpolate the sort property and sort order into the SQL query that fetches the tracks.
+Next, we need to actually use this state to sort the tracks. We can interpolate the sort property and sort order into a SQL query that fetches the tracks:
 
 ```jsx
-// Define SQL query for tracks list
+// Define SQL query for sorted tracks based on original tracks query
 const sortedTracks = db.query((get) => sql`
 select *
-from (${get(tracksQuery.queryString)})
-  left outer join albums on tracks.album_id = albums.id
+from (${get(tracksQuery.queryString)}) -- use tracks as a subquery
   order by ${get(state.sortProperty)} ${get(state.sortOrder)}
 `)
 ```
@@ -355,11 +355,11 @@ This new query for sorted tracks depends on the local component state, as well a
 
 ![](/assets/blog/prelude/component-2.png)
 
-Now when we click the table headers, we see the table reactively update:
+Now if we populate the list of tracks from this query, when we click the table headers, we see the table reactively update:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
 
-Of course, this is functionality that would be easy enough to build in a normal React app. What have we actually gained by taking the Riffle approach here?
+Of course, this is functionality that would be easy to build in a normal React app. What have we actually gained by taking the Riffle approach here?
 
 First, it's **simpler to understand** what's going on in the system, because the system has structured dataflow at runtime which exposes the provenance of computations. If we want to know why the tracks are showing up the way they are, we can inspect a query, and transitively inspect that query’s dependencies, just like in a spreadsheet.
 
