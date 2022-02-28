@@ -129,10 +129,17 @@ A *reactive* system tracks dependencies between data and automatically keeps dow
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
 
+<aside>
+<Markdown>
+
+This approach is closely related to the _document functional reactive programming (DFRP)_ model introduced in [Pushpin](https://www.inkandswitch.com/pushpin/), except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
+We can also [create reactive derived values from our data outside of the tree of UI elements](https://www.youtube.com/watch?v=_ISAA_Jt9kI), as in React state management frameworks like [Jotai](https://jotai.org/) and [Recoil](https://recoiljs.org/).
+</Markdown>
+</aside>
+
 In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated.
 
-This appraoch is closely related to the _document functional reactive programming (DFRP)_ model introduced in [Pushpin](https://www.inkandswitch.com/pushpin/), except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
-We can also [create reactive derived values from our data outside of the tree of UI elements](https://www.youtube.com/watch?v=_ISAA_Jt9kI), as in systems like [Jotai](https://jotai.org/), [Recoil](https://recoiljs.org/), and [RxJS](https://rxjs.dev/)
+Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
 <aside>
 <Markdown>
@@ -143,8 +150,6 @@ This is striking because even primitive databases like SQLite are fast on modern
 We hypothesize this is because developers are used to interacting with databases over the network, where network latencies apply. Also, developer intuitions about database performance were developed when hardware was much slower—modern storage is fast, and many often datasets fit into main memory even on mobile devices. Finally, many relational database management systems aren't built for low latency—many databases are built for analytics workloads on large data sets, where a bit of extra latency is irrelevant to overall performance.
 </Markdown>
 </aside>
-
-Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
 This performance budget is ambitious, but there are reasons to believe it's achievable if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [Noria](https://github.com/mit-pdos/noria), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
 
