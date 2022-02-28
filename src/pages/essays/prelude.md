@@ -539,9 +539,9 @@ Some React alternatives like [Svelte](https://svelte.dev/) and [SolidJS](https:/
 
 Another challenge has been integrating with React. In an ideal world, a write would result in Riffle fully atomically updating the query graph in a single pass, and minimally updating all the relevant templates. However, to preserve idiomatic React patterns (like passing component dependencies using props), we've found that it sometimes takes a few passes to respond to an update—a write occurs, Riffle queries update, React renders the UI tree and passes down new props, Riffle queries are updated with new parameters, then React renders the tree again, and so on. We're still finding the best patterns to integrate with React in a fast and unsurprising way.
 
-Rendering to the DOM has also been a source of performance problems. We've seen cases where the data for a playlist of tracks can be loaded in <1ms, but the browser takes hundreds of milliseconds to compute the CSS styles and layout.
+Rendering to the DOM has been another source of performance problems. We've seen cases where the data for a playlist of tracks can be loaded in <1ms, but the browser takes hundreds of milliseconds to compute the CSS styles and layout.
 
-We think there are probably reasonable solutions to each of these performance challenges in isolation, but the best solution might be a more integrated one that doesn't build on existing layers like SQlite and React.
+We think there are reasonable solutions to each of these performance challenges in isolation, but we suspect the best solution is a more integrated system that doesn't build on existing layers like SQlite and React.
 
 ### It's useful to model an app as a declarative query over the app state
 
