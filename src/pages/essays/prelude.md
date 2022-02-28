@@ -554,9 +554,7 @@ While we tried to stick to well-known technologies like SQL in our prototype, we
 
 ### Performance is a challenge with existing tools
 
-In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. Even a simple database like SQLite offers tools like indexes to respond to those access patterns; these tools are largely decoupled from the data model itself, and can even be modified without changing the queries.
-
-In practice, our results have been mixed.
+In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. In practice, our results have been mixed.
 
 <aside>
 <Markdown>
@@ -627,7 +625,7 @@ These experiments make us particularly excited about the transferability of insi
 ### Taking "everything is a query" even further
 
 Many modern app development frameworks adopt a sort of circular data flow: the UI is rendered as a pure function of some underlying state, and when the user performs some actions those trigger events, which cause cascading changes in the state and therefore the UI.
-Traditionally, there's a lot of work to propogate that change all the way through:
+Traditionally, there's a lot of work to propagate that change all the way through:
 1. Some kind of event manager needs to validate the event ("was it really safe to delete that playlist?") and apply it to the data.
 In a traditional web app, the event manager is the backend, but in a local-first architecture this is commonly done by a CRDT library such as Automerge.
 2. The app's business logic updates various pieces of derived state: for example, a playlist deletion would need to update the playlists shown in the sidebar, and possibly also update some metadata on the songs that were in that playlist.
@@ -641,7 +639,7 @@ In many modern apps, this is done using a frontend framework like React or Svelt
 In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
 If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
 
-One could imagine pushing this "everything is a query" persepctive even further, though.
+One could imagine pushing this "everything is a query" perspective even further, though.
 Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
 We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html).
 
