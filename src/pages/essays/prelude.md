@@ -658,6 +658,15 @@ User-facing apps face performance challenges that don't show up in other types o
 A key challenge in building performant apps is performing _incremental updates_: it's often much easier to describe how to build the UI from scratch than to figure out how it must update in response to a new event, but it's often too expensive to rebuild the UI from scratch every frame as in immediate-mode GUI tools.
 Indeed, a key lesson from React and other virtual DOM-based tools is finding a way to automatically transform a build-from-scratch description of the UI into an incremental one.
 
+<aside>
+<Markdown>
+Incremental view maintenance is the problem of updating the results of a query over some data as it changes.
+Simple indexes can be viewed as a sort of view--the data sorted by the index key--that is especially easy to maintain.
+The basic problem has been [studied](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.40.2254&rep=rep1&type=pdf) [for](https://wiki.postgresql.org/wiki/Incremental_View_Maintenance) [decades](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.31.3208&rep=rep1&type=pdf) in the database research community.
+Recently, new approaches to the incremental view maintenance problem have drawn from general incremental computing frameworks, like [differential dataflow](https://github.com/frankmcsherry/differential-dataflow).
+</Markdown>
+</aside>
+
 In the past twenty years, researchers in the programming languages and database communities have developed various tools for automatically incrementalizing computation.
 Many of these techniques are attempts to solve the _incremental view maintenance_ problem for relational databases, where a view of the data is dynamically maintained as new writes occur.
 
@@ -671,7 +680,12 @@ We believe that understanding data provenance is also a fundamental tool in unde
 Imagine a browser-style developer console that allows you to click on a UI element and see what component it was generated from. In a system with end-to-end provenance, we could identify how this element came to be in a much deeper way, answering questions not just questions like "what component template generated this element?" but "what query results caused that component to be included?" and even "what event caused those query results to look this way?".
 We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](https://www.cs.cmu.edu/~NatProg/whyline.html), where any piece of an app can be inspected to determine _why_ it's in that state.
 
-### End user programming through better abstractions
+### Where we're going
+
+We started this project wondering how the local-first availability of an app's data could change and simplify app development.
+At this point, we're left with more questions than answers.
+However, we see the outline of an approach where _user interfaces are expressed as queries_, those queries are executed by a fast, performant incremental maintenance system, and that incremental maintenance gives us _detailed data provenance_ throughout the system.
+Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
 
 <aside>
 <Markdown>
@@ -680,21 +694,6 @@ In our experience, users with no technical background besides computer office sk
 Nonetheless, Airtable has some significant limitations. Its query facilities are limited to what can be expressed in the view UI, and don't come close to expressing the full power of relational queries—for instance, it doesn't support general joins, or even nested filter predicates. Also, its performance degrades rapidly when a single database approaches the kinds of medium-sized data sets that we are most interested in, and it has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
 </Markdown>
 </aside>
-
-We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers.
-Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
-
-Riffle attacks the problem from a different direction: instead of aiming at extremely simple use cases, it starts by trying to express the full power of a relational model to experienced developers.
-We hope that these new abstractions can build a solid foundation on which higher-level tools can be built for end-users.
-
-Put another way: you can’t use Airtable to write iTunes, but we’ve been able to use Riffle to make myTunes.
-
-### Where we're going
-
-We started this project wondering how the local-first availability of an app's data could change and simplify app development.
-At this point, we're left with more questions than answers.
-However, we see the outline of an approach where _user interfaces are expressed as queries_, those queries are executed by a fast, performant incremental maintenance system, and that incremental maintenance gives us _detailed data provenance_ throughout the system.
-Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
 
 We find a lot of inspiration from tools like spreadsheets, arguably the origin of the reactive programming model, and Airtable, which draws inspiration from the relational model.
 These tools are highly productive in their domains; in our experience, they are _more productive_ than traditional developer tools even for skilled software engineers.
