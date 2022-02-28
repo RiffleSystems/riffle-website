@@ -634,10 +634,11 @@ We saw an early example of this in our query debugger view, but we believe that 
 ### End user programming through better abstractions
 
 <aside>
+<Markdown>
 Airtable is by far the most polished expression of the relational model in a tool aimed at end users.
 In our experience, users with no technical background besides computer office skills can be highly productive in Airtable after just a few months.
-Nonetheless, Airtable has some significant limitations. Its query facilities are limited to what can be expressed in the view UI, and don't come close to expressing the full power of relational queries—for instance, it doesn't support general joins, or even nested filter predicates. Also, its performance degrades rapidly when a single database approaches the kinds of medium-sized data sets that we are most interested in, and it, has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
-
+Nonetheless, Airtable has some significant limitations. Its query facilities are limited to what can be expressed in the view UI, and don't come close to expressing the full power of relational queries—for instance, it doesn't support general joins, or even nested filter predicates. Also, its performance degrades rapidly when a single database approaches the kinds of medium-sized data sets that we are most interested in, and it has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
+</Markdown>
 </aside>
 
 We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers.
