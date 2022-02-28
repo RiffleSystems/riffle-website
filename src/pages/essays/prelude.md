@@ -20,8 +20,6 @@ draft: false
 description:
 ---
 
-<div style="color: red; font-weight: bold;">This is a private draft, please don't share widely. Thanks for reading!</div>
-
 <Abstract>
 <Markdown>
 
