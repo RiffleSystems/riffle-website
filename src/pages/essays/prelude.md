@@ -76,7 +76,7 @@ In a local-first application, this doesn't need to be the case; all the queries 
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
 
-This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome). 
+This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome).
 It's not a common approach to managing state in client-side web development, although there have been successful projects in this area, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser (and more recently, the [absurd-sql](https://jlongster.com/future-sql-web) project which persists a SQL.js database using IndexedDB).
 In many ways, powerful end-user focussed tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
 We think relational queries in the client UI is a pattern that deserves to be more widely used.
@@ -599,6 +599,16 @@ We saw an early example of this in our query debugger view, but we believe that 
 
 ### End user programming through better abstractions
 
+<aside>
+Airtable is by far the most polished expression of the relational model in a tool aimed at end users.
+In our experience, users with no technical background besides computer office skills can be highly productive in Airtable after just a few months.
+Nonetheless, Airtable has some significant limitations, which give it the sort of ceiling that we are worried about:
+
+1. Its query facilities are limited to what can be expressed in the view UI, and these don't come close to expressing the full power of relational queries. For instance, it doesn't support general joins, or even nested filter predicates.
+2. Its performance degrades rapidly when a single database ("base", in Airtable terminology) approaches the kinds of medium-sized data sets that we are most interested in. As a result, Airtable has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
+
+</aside>
+
 We find a lot of inspiration in tools like Airtable, which draw from the relational model to create powerful tools targeted at end users. Airtable is a highly productive tool for building lightweight, reactive, data-centric apps, even for skilled software developers.
 Airtable also contains a remarkable set of “escape hatches” that allow programmers to build embedded React apps within the Airtable UI.
 
@@ -613,16 +623,6 @@ We started this project wondering how the local-first availability of an app's d
 At this point, we're left with more questions than answers.
 However, we see the outline of an appraoch where _user interfaces are expressed as queries_, those queries are executed by a fast, performant incremental maintenance system, and that incremental maintenance gives us _detailed data provnenace_ throughout the system.
 Together, those ideas seem like they could make app development radically simpler and more accessible, possibly so simple that it could be done "at the speed of thought" by users who aren't skilled in app development.
-
-<aside>
-Airtable is by far the most polished expression of the relational model in a tool aimed at end users.
-In our experience, users with no technical background besides computer office skills can be highly productive in Airtable after just a few months.
-Nonetheless, Airtable has some significant limitations, which give it the sort of ceiling that we are worried about:
-
-1. Its query facilities are limited to what can be expressed in the view UI, and these don't come close to expressing the full power of relational queries. For instance, it doesn't support general joins, or even nested filter predicates.
-2. Its performance degrades rapidly when a single database ("base", in Airtable terminology) approaches the kinds of medium-sized data sets that we are most interested in. As a result, Airtable has a [hard limit of 50,000 records per base](https://support.airtable.com/hc/en-us/articles/115010928147-Airtable-plans).
-
-</aside>
 
 We find a lot of inspiration from tools like spreadsheets, arguably the origin of the reactive programming model, and Airtable, which draws inspiration from the relational model.
 These tools are highly productive in their domains; in our experience, they are _more productive_ than traditional developer tools even for skilled software engineers.
