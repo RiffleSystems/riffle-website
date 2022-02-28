@@ -54,9 +54,9 @@ We think there are even greater opportunities to apply ideas from database resea
 
 To start exploring these ideas in practice, we've built an initial prototype: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into opportunities and challenges, which we share in this essay.
 
-## Hypotheses
+## Principles
 
-We started our project with some specific hypotheses about how ideas from the databases world could simplify state management in GUI apps.
+We started our project with some specific design principles we thought could simplify state management in GUI apps. Each principle draws on extensive prior work in databases and UI development, but we suspected they'd be powerful when combined together in one system.
 
 ### Declarative queries clarify application structure
 
@@ -135,7 +135,7 @@ TK related work to weave in
     - Firebase
 
 
-## Our prototype system
+## Prototype system: SQLite + React
 
 We've built an initial prototype of the Riffle system as a state manager for web browser apps.
 
@@ -143,7 +143,7 @@ For this prototype, our goal was to explore possible developer experiences when 
 
 ![](/assets/blog/prelude/prototype.png)
 
-We built a reactive query layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. To run apps fully in the browser (pictured above), we run the SQLite database in a browser web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). To build desktop apps, we build the frontend UI in [Tauri](https://tauri.studio/) and run SQLite in a native process, persisting the device filesystem. For rendering, we use React, which interacts with Riffle via custom hooks.
+The prototype is a reactive query layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. To run apps fully in the browser (pictured above), we run the SQLite database in a browser web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). To build desktop apps, we build the frontend UI in [Tauri](https://tauri.studio/) and run SQLite in a native process, persisting the device filesystem. For rendering, we use React, which interacts with Riffle via custom hooks.
 
 In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -171,7 +171,7 @@ In this section, we’ll demo our prototype by showing how to use it to build a 
 | 22 | Drake |
 | 23 | Michael Jackson |
 
-### Showing a list of tracks
+### A first reactive query
 
 In our app, we’d like to show a list view, where each track has a single row showing its album and artist name. Using SQL, it’s straightforward to load the name for each track, and to load the name of its album and artist. We can do this declaratively, specifying the tables to join separately from any particular join strategy.
 
@@ -250,7 +250,7 @@ The UI looks like this:
 
 Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
 
-### Sorting tracks
+### Reacting to UI state in the database
 
 Next, let's add some interactive functionality by making the table sortable when the user clicks on the column headers. The current sort property and direction represents a new piece of *state* that needs to be managed in our application. A typical React solution might be to introduce some local component state with the `useState` hook. But the idiomatic Riffle solution is to avoid React state, and instead to store the UI state in the database.
 
@@ -297,7 +297,11 @@ const TrackList = () => {
 }
 ```
 
-Next, we need to actually use this state to sort the tracks. We can interpolate the sort property and sort order into the SQL query that fetches the tracks. The function that generates our SQL query can use a `get` operator to read other reactive values.
+<aside>
+The function that generates our SQL query can use a `get` operator to read other reactive values. This doesn't just read the current value; it creates a reactive dependency.
+</aside>
+
+Next, we need to actually use this state to sort the tracks. We can interpolate the sort property and sort order into the SQL query that fetches the tracks.
 
 ```jsx
 // Define SQL query for tracks list
@@ -309,7 +313,7 @@ from (${get(tracksQuery.queryString)})
 `)
 ```
 
-This establishes a new reactive dependency. Up until now, the query string was hardcoded, and it would only reactively update when the database contents changed. Now, the query string itself depends on the local component state. Riffle’s reactivity system ensures that queries run in a correct dependency order.
+This new query for sorted tracks depends on the local component state, as well as the original tracks query:
 
 ![](/assets/blog/prelude/component-2.png)
 
@@ -325,7 +329,7 @@ Second, we can achieve more **efficient execution** by pushing computations down
 
 Finally, UI state is **persistent by default**. It’s often convenient for end-users to have state like sort order or scroll position persisted, but it takes active work for app developers to add these kinds of features. In Riffle, persistence comes for free, although ephemeral state is still easily achievable by setting up component keys accordingly.
 
-### Search
+### Doing full text search in the database
 
 Next, let’s add a search box where the user can type to filter the list of tracks by track, album, or artist name. We can add the current search term as a new column in the track list’s component state:
 
@@ -370,7 +374,7 @@ Interestingly, because we’re using a controlled component, every keystroke the
 
 It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run many queries fast enough to make this approach work, although we still plan to develop more asynchronous approaches for handling slower queries.
 
-### Virtualized list rendering
+### Building virtualized list rendering from scratch
 
 Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below. With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code.
 
@@ -411,7 +415,7 @@ This introduces yet another layer to our reactive query graph. Once again, by ex
 
 This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a collection of 250k+ tracks. Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view. The local-first architecture has enabled a much simpler approach.
 
-### Interoperability through data-centric APIs
+### Editing the data from outside the app
 
 _todo: merge this w/ the finding below?_
 
@@ -419,7 +423,7 @@ One thing we've found intriguing about our prototype is that we can inspect and 
 
 We've also explored this idea for integrating with external services. We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API. Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database. In practice, the application can simply use the database; we have a separate daemon which observes the database and syncs its state with Spotify.
 
-### Building a complex app
+### Building a complex app?
 
 So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more.
 
