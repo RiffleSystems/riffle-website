@@ -463,7 +463,11 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 ### Editing the data from outside the app
 
-One thing we've found intriguing about our prototype is that we can inspect and edit the entire state of the system in a generic database editor. When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a tool like TablePlus. In addition to debugging any state in the app, we can also do things like change the current sort order or play/pause music. Of course, this could also be done programatically by a script that talks to the database.
+When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like TablePlus. This is helpful for debugging, but we can go further: we can even _modify the UI state_ of the app from the generic tool, e.g. changing the search term or sort order. The UI reacts as the database contents change:
+
+<video controls="controls" muted="muted" src="/assets/blog/prelude/interop.mp4" playsinline="" />
+
+Of course, this modification could be done programatically by a script or an alternate UI, rather than a person manually using a generic tool. By putting UI state in the database, we've effectively created a data-centric scripting API for interacting with the application.
 
 We've also explored this idea for integrating with external services.
 We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API.
