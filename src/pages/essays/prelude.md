@@ -2,6 +2,8 @@
 setup: |
   import Layout from '../../layouts/BlogPost.astro'
   import SubscriptionBox from '../../components/SubscriptionBox.astro'
+  import Abstract from '../../components/Abstract.astro'
+  import { Markdown } from "astro/components";
 title: Building data-centric apps with a reactive relational database
 authors:
   -
@@ -19,6 +21,18 @@ description:
 ---
 
 <div style="color: red; font-weight: bold;">This is a private draft, please don't share widely. Thanks for reading!</div>
+
+<Abstract>
+  <p>Interactive, collaborative applications are becoming harder to build. The web stack grows ever more complex, and users expect more from their apps.</p>
+
+  <p>On the Riffle project, we're aiming to rethink app development in order to make it simpler for developers to create good software, and to enable more people to build and customize their own apps.</p>
+
+  <p>Our key idea is to use a local-first architecture that puts the data on the client, and to take full advantage of local data availability to support new UI development patterns. We propose managing all application and UI state in a local <em>reactive relational</em> database, which provides a clearly structured model for reasoning about dataflow.</p>
+
+  <p>We've built an early prototype of this idea as a React state management library built on top of SQLite. In this essay, we describe what we've learned so far from using this prototype, and sketch a path towards a simpler paradigm for building stateful apps.</p>
+</Abstract>
+
+## Introduction
 
 Modern web applications are complicated to build because they have many redundant data representations spanning across the backend and frontend. For example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
