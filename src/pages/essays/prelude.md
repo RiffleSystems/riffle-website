@@ -545,7 +545,7 @@ We think there are reasonable solutions to each of these performance challenges 
 
 ### It's useful to model an app as a declarative query over the app state
 
-This version or Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
+This version of Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
 Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
 
 [TK insert picture]
