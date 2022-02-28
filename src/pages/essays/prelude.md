@@ -116,8 +116,8 @@ In a local-first application, this doesn't need to be the case; all the queries 
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
 
-This is an uncontroversial stance in backend web development where SQL is commonplace; it's also a common approach in the many complex desktop apps that use SQLite as an embedded datastore (including Adobe Lightroom, Apple Photos, and Google Chrome).
-It's not a common approach to managing state in client-side web development, although there have been successful projects in this area, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser.
+This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use SQLite as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
+In client-side web development, the relational model is less common, although there have been prominent exceptions, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser.
 In many ways, powerful end-user focussed tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
 We think relational queries in the client UI is a pattern that deserves to be more widely used.
 
@@ -127,7 +127,7 @@ We think relational queries in the client UI is a pattern that deserves to be mo
 
 A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. Frameworks like [React](https://reactjs.org/), [Svelte](https://svelte.dev/), and [Solid]() have popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
-However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request (e.g. reloading a page); doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client.
+However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request like reloading a page; doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client. This limits the scope of the reactivity: the UI is guaranteed to show the latest local state, but not the latest state from the database.
 
 <aside>
 <Markdown>
@@ -137,7 +137,7 @@ We can also [create reactive derived values from our data outside of the tree of
 </Markdown>
 </aside>
 
-In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated.
+In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated. The UI is now guaranteed to accurately reflect the latest contents of the database at all times.
 
 Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
@@ -151,7 +151,7 @@ We hypothesize this is because developers are used to interacting with databases
 </Markdown>
 </aside>
 
-This performance budget is ambitious, but there are reasons to believe it's achievable if we use a relational model. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [Noria](https://github.com/mit-pdos/noria), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
+This performance budget is ambitious, but there are reasons to believe it's achievable if we use a local relational database. The database community has spent considerable effort making it fast to execute relational queries; many SQLite queries complete in well under one millisecond. Furthermore, there has been substantial work on incrementally maintaining relational queries (e.g., [Materialize](https://materialize.com/), [Noria](https://github.com/mit-pdos/noria), [SQLive](https://sqlive.io/), and [Differential Datalog](https://github.com/vmware/differential-datalog)) which can make small updates to queries much faster than re-running from scratch.
 
 ### Managing all state in one system provides greater flexibility
 
