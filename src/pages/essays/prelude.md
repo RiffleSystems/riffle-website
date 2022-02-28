@@ -340,7 +340,7 @@ This new query for sorted tracks depends on the local component state, as well a
 
 ![](/assets/blog/prelude/component-2.png)
 
-Now when we click the table headers, we see the table reactively update!
+Now when we click the table headers, we see the table reactively update:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
 
@@ -395,13 +395,19 @@ Now, when the user types into the search box, their search term appears and filt
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
-It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later on Findings we discuss what to do about the cases where it's not fast enough.)
+It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later in Findings we discuss what to do about the cases where it's not fast enough.)
+
+### Selection state in the database
+
+As another example of the speed that this approach can achieve—we can store the currently selected track state in the database. The system is responsive enough to make selection feel perfectly responsive, even though it's roundtripping through the database every time the selection changes:
+
+<video controls="controls" muted="muted" src="/assets/blog/prelude/selection.mp4" playsinline="" />
 
 ### Building virtualized list rendering from scratch
 
-Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below. With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code.
+Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below.
 
-We start by representing the current scroll position in the list as a new state column on the track list component, `scrollIndex`. As the user scrolls, we use an event handler on the DOM to update this value, essentially mirroring the stateful scroll position of the DOM into the database. We also throttle updates to happen at most once every 50ms to avoid overwhelming the database with writes during rapid scrolling.
+With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code. We start by representing the current scroll position in the list as a new state column on the track list component, `scrollIndex`. As the user scrolls, we use an event handler on the DOM to update this value, essentially mirroring the stateful scroll position of the DOM into the database. We also throttle updates to happen at most once every 50ms to avoid overwhelming the database with writes during rapid scrolling.
 
 ```jsx
 import { throttle } from 'lodash'
@@ -433,10 +439,11 @@ const filteredPagedTracks = db.query(() => {
   `
 },
 ```
+This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a large collection of tracks.
 
-This introduces yet another layer to our reactive query graph. Once again, by explicitly representing all these dependencies in Riffle, we gain two key advantages: the runtime can efficiently schedule incremental updates through the graph, and the user can inspect and understand the structure of the computation.
+<video controls="controls" muted="muted" src="/assets/blog/prelude/scroll.mp4" playsinline="" />
 
-This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a collection of 250k+ tracks. Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view. The local-first architecture has enabled a much simpler approach.
+ Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view.
 
 ### Editing the data from outside the app
 
