@@ -135,6 +135,8 @@ However, database queries are often not included in the core reactive loop. When
 
 This approach is closely related to the _document functional reactive programming (DFRP)_ model introduced in [Pushpin](https://www.inkandswitch.com/pushpin/), except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
 We can also [create reactive derived values from our data outside of the tree of UI elements](https://www.youtube.com/watch?v=_ISAA_Jt9kI), as in React state management frameworks like [Jotai](https://jotai.org/) and [Recoil](https://recoiljs.org/).
+
+This is also related to cloud reactive datastores like [Firebase](https://firebase.google.com/) and [Meteor](https://www.meteor.com/), but storing data on-device rather than on a server enables fundamentally different usage patterns.
 </Markdown>
 </aside>
 
@@ -165,13 +167,6 @@ With a fast database close at hand, this split doesn't need to exist. What if we
 It would still be essential to configure state along various dimensions: persistence, sharing across users, etc.
 But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
 This would make it easy to decide to persist some UI state, like the currently active tab in an app. UI state could even be shared among clients—in real-time collaborative applications, it's often useful to share cursor position, live per-character text contents, and other state that was traditionally relegated to local UI state.
-
-TK related work to weave in
-- Elm architecture
-- Redux
-- **Cloud Full-stack reactivity**
-    - Meteor
-    - Firebase
 
 
 ## Prototype system: SQLite + React
@@ -475,7 +470,7 @@ However, these imperative calls are tricky: for example, they implicitly depend 
 Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
 When the user performs an action, we write that action to the database as an event, which is then synced by a background daeomon using the imperative Spotify APIs.
 Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
-We discuss this unconventional approach to application interop [below](#data-based-interoperability-offers-advantages-over-action-based-apis)
+We discuss this unconventional approach to application interop [below](#data-based-interoperability-offers-advantages-over-action-based-apis).
 
 TK add picture?
 
