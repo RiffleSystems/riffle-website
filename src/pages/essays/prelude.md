@@ -72,7 +72,7 @@ Could we take more integrated approaches to computing with data that make it eas
 If an application developer can rely on a powerful state management layer, then their UI code can just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates.
 Writing an application that spans across devices and users could feel closer to simply writing a local-only app.
 
-This insight is not totally novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users, removing traditional server layers. 
+This insight is not totally novel: many local first-apps already use general-purpose [CRDT](https://github.com/automerge/automerge) [libraries](https://github.com/yjs/yjs) to automatically synchronize their state between users, removing traditional server layers.
 
 With immediate access to local data, we think that **databases have many solutions to state problems**.
 Reseachers and engineers have worked for nearly 50 years to design computer systems that specialize in managing state: databases!
@@ -694,7 +694,7 @@ We're excited by this potential, and even more excited by the possiblity that we
 
 We'd love your feedback: we're reachable by email at [feedback@riffle.systems](mailto:feedback@riffle.systems) and on Twitter at [@geoffreylitt](https://twitter.com/geoffreylitt) and [@nschiefer](https://twitter.com/nschiefer)!
 
-*We're grateful for clarifying conversations with Jamie Brandon, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Jalex Stark, and Peter van Hardenberg as we developed the ideas in this essay.
+*We're grateful for clarifying conversations with Jamie Brandon, Josh Horowitz, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Jalex Stark, and Peter van Hardenberg as we developed the ideas in this essay.
 Geoffrey Litt was supported by an NSF GRFP Fellowship.
 Nicholas Schiefer was supported by a Simons Investigator Award.*
 
