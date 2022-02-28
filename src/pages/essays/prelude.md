@@ -645,8 +645,6 @@ This would traditionally be done in either the model and controller of a Rails-s
 In our example, we might need to switch back to some home screen if the deleted playlist was selected by the user.
 In many modern apps, this is done using a frontend framework like React or Svelte.
 
-[TK insert diagram]
-
 In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
 If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
 
@@ -655,6 +653,8 @@ Instead of viewing the entire app as a relational view that represents a tree of
 We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html).
 
 Taken to the extreme, we end up with a minimal model of an interactive app, where users take actions that are recorded in an event log, and then those actions cause changes in a UI described entirely by a declarative query.
+
+![](/assets/blog/prelude/one-query.png)
 
 ### What might compressing the stack into a query get us?
 
