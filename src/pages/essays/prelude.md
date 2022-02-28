@@ -463,11 +463,15 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 ### Editing the data from outside the app
 
-_todo: merge this w/ the finding below?_
-
 One thing we've found intriguing about our prototype is that we can inspect and edit the entire state of the system in a generic database editor. When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a tool like TablePlus. In addition to debugging any state in the app, we can also do things like change the current sort order or play/pause music. Of course, this could also be done programatically by a script that talks to the database.
 
-We've also explored this idea for integrating with external services. We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API. Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database. In practice, the application can simply use the database; we have a separate daemon which observes the database and syncs its state with Spotify.
+We've also explored this idea for integrating with external services.
+We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API.
+However, these imperative calls are tricky: for example, they implicitly depend on the order in which things happen, and that order is poorly defined in an asychronous environment.
+Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
+When the user performs an action, we write that action to the database as an event, which is then synced by a background daeomon using the imperative Spotify APIs.
+Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
+We discuss this unconventional approach to application interop [below](#data-based-interoperability-offers-advantages-over-action-based-apis)
 
 ### Building a complex app?
 
