@@ -502,9 +502,11 @@ In addition, few frontend developers are deeply familiar with SQL, and it feels 
 </Markdown>
 </aside>
 
-In practice, writing data transformations in SQL helped less than we expected from the perspective of _statically_ understanding code, i.e. reading code in a text editor. However, we found that relational queries created intriguing opportunities to understand data transformations _dynamically_ while an app is running.
-As we built our our debugger, we were impressed by how useful it was to inspect entire result sets from queries in our data transformation pipeline.
-Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
+In practice, writing data transformations in SQL helped less than we expected from the perspective of _statically_ understanding code, i.e. reading code in a text editor. However, we found that relational queries created intriguing opportunities to understand data transformations _dynamically_ while an app is running. Because the underlying query model provides so much structure, we were able to prototype a primitive debugger which visualizes component state, query strings, and reactive dependencies, all live within the context of the running interface:
+
+<video controls="controls" muted="muted" src="/assets/blog/prelude/debugger.mp4" playsinline="" />
+
+This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model. Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
 
 It's interesting to compare this set-wise debugging from debuggers in imperative programs.
