@@ -635,6 +635,8 @@ These experiments make us particularly excited about the transferability of insi
 
 ### Taking "everything is a query" even further
 
+![](/assets/blog/prelude/one-query.png)
+
 Many modern app development frameworks adopt a sort of circular data flow: the UI is rendered as a pure function of some underlying state, and when the user performs some actions those trigger events, which cause cascading changes in the state and therefore the UI.
 Traditionally, there's a lot of work to propagate that change all the way through:
 1. Some kind of event manager needs to validate the event ("was it really safe to delete that playlist?") and apply it to the data.
@@ -653,8 +655,6 @@ Instead of viewing the entire app as a relational view that represents a tree of
 We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html).
 
 Taken to the extreme, we end up with a minimal model of an interactive app, where users take actions that are recorded in an event log, and then those actions cause changes in a UI described entirely by a declarative query.
-
-![](/assets/blog/prelude/one-query.png)
 
 ### What might compressing the stack into a query get us?
 
