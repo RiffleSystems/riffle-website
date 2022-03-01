@@ -36,10 +36,10 @@ export const AuthorList = (props) => {
 };
 
 const Author = (props) => {
-  const { email, name, postSymbol } = props;
+  const { link, name, postSymbol } = props;
   return (
     <span>
-      <a href={"mailto:" + email}>{name}</a>
+      <a href={link}>{name}</a>
       {postSymbol && <sup>{postSymbol}</sup>}
     </span>
   );

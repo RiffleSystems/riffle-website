@@ -8,13 +8,13 @@ title: Building data-centric apps with a reactive relational database
 authors:
   -
     - name: Geoffrey Litt
-      email: glitt@mit.edu
+      link: https://www.geoffreylitt.com/
     - name: Nicholas Schiefer
-      email: schiefer@mit.edu
+      link: https://nicholasschiefer.com/
   - name: Johannes Schickling
-    email: schickling.j@gmail.com
+    link: https://twitter.com/schickling
   - name: Daniel Jackson
-    email: dnj@csail.mit.edu
+    link: http://people.csail.mit.edu/dnj/
 publishDate: 28 Feb 2022
 draft: false
 description:
