@@ -3,9 +3,7 @@ import { AuthorList } from "./AuthorList.jsx";
 
 export interface Props {
   title: string;
-  authors: [
-    { name: string; link: string } | [{ name: string; link: string }]
-  ];
+  authors: [{ name: string; link: string } | [{ name: string; link: string }]];
   publishDate: string;
   heroImage: string;
   alt: string;
@@ -62,8 +60,18 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     max-width: 70ch;
   }
 
+  @media (max-width: 1100px) and (min-width: 768px) {
+    .content {
+      max-width: 60ch;
+    }
+  }
+
   .content :global(main > * + *) {
     margin-top: 1.25rem;
+  }
+
+  .content :global(h1) {
+    font-size: 2.25rem;
   }
 
   .content :global(h2) {
@@ -77,6 +85,12 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     margin-bottom: -0.5rem;
     font-weight: bold;
     font-size: 1.25rem;
+  }
+
+  @media (max-width: 768px) {
+    .content :global(h1) {
+      font-size: 1.8rem;
+    }
   }
 
   .content :global(table) {
@@ -122,7 +136,8 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
   Based on Gwern's analysis of the Tufte-CSS side note feature.
   https://www.gwern.net/Sidenotes#tufte-css
   */
-  .content :global(aside), .content :global(.aside) {
+  .content :global(aside),
+  .content :global(.aside) {
     float: right;
     margin-right: -60%;
     width: 50%;
@@ -133,9 +148,19 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     position: relative;
   }
 
+  /* tablet width */
+  @media (max-width: 1100px) and (min-width: 768px) {
+    .content :global(aside),
+    .content :global(.aside) {
+      margin-right: -45%;
+      width: 35%;
+    }
+  }
+
   /* The mobile fallback: */
-  @media (max-width: 760px) {
-    .content :global(aside), .content :global(.aside) {
+  @media (max-width: 768px) {
+    .content :global(aside),
+    .content :global(.aside) {
       display: block;
       float: none;
       clear: both;
@@ -143,7 +168,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
       margin: 1rem 0;
       vertical-align: baseline;
       position: relative;
-      background: var( --color-gray-100);
+      background: var(--color-gray-100);
       padding: 1rem;
       border: solid thin var(--color-gray-200);
     }
