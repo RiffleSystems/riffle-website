@@ -379,6 +379,10 @@ This new query for sorted tracks depends on the local component state, as well a
 
 ![](/assets/blog/prelude/component-2.png)
 
+This query is pretty ugly, especially since we're relying on string interpolation to connect two pieces of the data in the database.
+This is an unfortunate limitation of the tooling we've used for this experiment: SQLite's dialect of SQL has no way to dynamically control the sort oder using a relation, so we have to use Javascript string interpolation instead.
+Ignoring the technical limitations, once can imagine writing this in a more relational way that doesn't involve string interpolation at all.
+
 Now if we populate the list of tracks from this query, when we click the table headers, we see the table reactively update:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
