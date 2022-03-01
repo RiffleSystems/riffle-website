@@ -60,7 +60,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     max-width: 70ch;
   }
 
-  @media (max-width: 1100px) and (min-width: 768px) {
+  @media (max-width: 1000px) and (min-width: 768px) {
     .content {
       max-width: 60ch;
     }
@@ -161,6 +161,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
   .content :global(.aside) {
     float: right;
     margin-right: -60%;
+    padding-right: 5rem;
     width: 50%;
     margin-top: 0.3rem;
     margin-bottom: 0;
@@ -170,11 +171,12 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
   }
 
   /* tablet width */
-  @media (max-width: 1100px) and (min-width: 768px) {
+  @media (max-width: 1000px) and (min-width: 768px) {
     .content :global(aside),
     .content :global(.aside) {
       margin-right: -45%;
       width: 35%;
+      padding-right: 0;
     }
   }
 
