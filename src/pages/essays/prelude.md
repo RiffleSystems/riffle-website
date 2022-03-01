@@ -126,7 +126,7 @@ Declarative queries express intent more concisely than imperative code, and allo
 
 This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use SQLite as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
 In client-side web development, the relational model is less common, although there have been prominent exceptions, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser.
-In many ways, powerful end-user focussed tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
+In many ways, powerful end-user focused tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
 We think relational queries in the client UI is a pattern that deserves to be more widely used.
 
 ### Fast reactive queries provide a clean mental model
@@ -457,13 +457,13 @@ const filteredPagedTracks = db.query((get) => {
   `
 },
 ```
-This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a large collection of tracks.
+This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a large collection of tracks:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/scroll.mp4" playsinline="" />
 
  Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view.
 
-### Editing the data from outside the app
+### Editing UI state from another app
 
 When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like TablePlus. This is helpful for debugging, but we can go further: we can even _modify the UI state_ of the app from the generic tool, e.g. changing the search term or sort order. The UI reacts as the database contents change:
 
