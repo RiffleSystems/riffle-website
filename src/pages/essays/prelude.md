@@ -37,8 +37,8 @@ While we've only scratched the surface so far, our initial explorations suggest 
 ## Introduction
 
 Today, building interactive apps is so hard that it's a specialized skill even among software developers.
-Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are [disepowered](https://www.geoffreylitt.com/2019/07/29/browser-extensions.html) entirely.
-Like [many](https://www.inkandswitch.com/end-user-programming/) [other](http://worrydream.com/ClimateChange/) [researchers](https://mavo.io/), we'd like to fix this by making app development radically more accessible to experts and novices alike.
+Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are disempowered entirely.
+Like many other researchers, we'd like to make app development radically more accessible to experts and novices alike.
 
 <aside>
 
@@ -56,7 +56,7 @@ Our key hypothesis is that app development is hard in large part because **manag
 Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propagating state.
 In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
 
-In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embededded databases.
+In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embedded databases.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 Web apps have many redundant data representations spanning across the backend and frontend: for example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
@@ -85,7 +85,7 @@ The power of client-side databases is already well-known in some contexts—many
 </aside>
 
 What might such a powerful state management layer look like?
-It turns out that reseachers and engineers have worked for decades on systems that specialize in managing state: databases!
+It turns out that researchers and engineers have worked for decades on systems that specialize in managing state: databases!
 We think that **many of the technical challenges in client-side application development can be solved by ideas originating in the databases community**.
 As a simple example, frontend programmers commonly build data structures tailored to looking up by a particular attribute; databases solve precisely the same problem with _indexes_, which offer more powerful and automated solutions.
 We see especially great promise in applying recent research on better relational languages and fast incremental view maintenance to app development.
@@ -435,7 +435,7 @@ It's unusual to send user input through the database before showing it on the sc
 
 ### Selection state in the database
 
-As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's roundtripping through the database every time the selection changes:
+As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/selection.mp4" playsinline="" />
 
@@ -487,13 +487,13 @@ When using the desktop version of our app, the database is stored in a SQLite fi
 
 <video controls="controls" muted="muted" src="/assets/blog/prelude/interop.mp4" playsinline="" />
 
-Of course, this modification could be done programatically by a script or an alternate UI, rather than a person manually using a generic tool. By putting UI state in the database, we've effectively created a data-centric scripting API for interacting with the application.
+Of course, this modification could be done programmatically by a script or an alternate UI, rather than a person manually using a generic tool. By putting UI state in the database, we've effectively created a data-centric scripting API for interacting with the application.
 
 We've also explored this idea for integrating with external services.
 We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API.
-However, these imperative calls are tricky: for example, they implicitly depend on the order in which things happen, and that order is poorly defined in an asychronous environment.
+However, these imperative calls are tricky: for example, they implicitly depend on the order in which things happen, and that order is poorly defined in an asynchronous environment.
 Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
-When the user performs an action, we write that action to the database as an event, which is then synced by a background daeomon using the imperative Spotify APIs.
+When the user performs an action, we write that action to the database as an event, which is then synced by a background daemon using the imperative Spotify APIs.
 Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
 We discuss this unconventional approach to interoperability [below](#data-based-interoperability-offers-advantages-over-action-based-apis).
 
@@ -511,7 +511,7 @@ Overall, working with our prototype system made us optimistic that this is a pro
 
 ### Relational queries make it easier to understand running programs
 
-We began with the observation that a lot of program complexity comes from managing state and propogating state changes, and that declarative quries are a natural, ergonomic way to express those data transformations.
+We began with the observation that a lot of program complexity comes from managing state and propagating state changes, and that declarative queries are a natural, ergonomic way to express those data transformations.
 
 <aside>
 <Markdown>
@@ -556,17 +556,17 @@ This problem is reminiscent of some of the challenges of Smalltalk images, where
 </aside>
 
 In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the program is re-run.
-Our prototype stores all state, including ephemeral UI state that would normally live exclusivley in the main object graph, in the database, so any change to the layout of that ephermeral state forced a migration.
+Our prototype stores all state, including ephemeral UI state that would normally live exclusively in the main object graph, in the database, so any change to the layout of that ephemeral state forced a migration.
 In most cases, we chose to simply delete the relevant tables and recreate them while in development, which essentially recreates the traditional workflow with ephemeral state.
 
-Of course, Riffle is not the first sytem to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
+Of course, Riffle is not the first system to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
 We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
 ### SQL has shortcomings for UI development
 
 We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
 
-Nonetheless, SQL was a consistent thorn in our side during this project. The deficiencies of SQL are [well-known](https://www.scattered-thoughts.net/writing/against-sql), so we won’t belabour them here. A few key pain points for us were:
+Nonetheless, SQL was a consistent thorn in our side during this project. The deficiencies of SQL are [well-known](https://www.scattered-thoughts.net/writing/against-sql), so we won’t belabor them here. A few key pain points for us were:
 
 <aside>
 <Markdown>
@@ -626,14 +626,14 @@ So, we could view the queries and template together as a large, tree-structured 
 
 <aside>
 <Markdown>
-This perspective ends up looking a lot like [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/), a relational langauge for defining UIs: the app is _defined_ as query over the data, with results that define the UI elements on the screen.
+This perspective ends up looking a lot like [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/), a relational language for defining UIs: the app is _defined_ as query over the data, with results that define the UI elements on the screen.
 </Markdown>
 </aside>
 
 Since both the queries and the templates are pure functions of the base state, we can look at our entire component tree as one giant query that defines a particular view of the data.
-This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
+This view is precisely analogous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
-In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
+In this light, the problem of maintaining the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
 ### Data-based interoperability offers advantages over action-based APIs.
@@ -652,7 +652,7 @@ Third, we found that treating the data format as a core interface for an app sol
 
 Our early investigations suggest that a local-first, data-centric architecture radically simplifies some parts of app development.
 We also know that it is at least somewhat practical: we've managed to build a real app that works with moderate amounts of data and has good performance.
-These experiments make us particularly excited about the transferability of insights and technologies from the database reserach community to the domain of app development.
+These experiments make us particularly excited about the transferability of insights and technologies from the database research community to the domain of app development.
 
 ### Taking "everything is a query" even further
 
@@ -700,12 +700,12 @@ Recently, new approaches to the incremental view maintenance problem have drawn 
 In the past twenty years, researchers in the programming languages and database communities have developed various tools for automatically incrementalizing computation.
 Many of these techniques are attempts to solve the _incremental view maintenance_ problem for relational databases, where a view of the data is dynamically maintained as new writes occur.
 
-If the UI can be expressed in a way that is friendly to one of these automated incremental maintenance, perhaps as a declarative view of the data, we might be able to express user interfaces in a declarative, build-from-scratch way but obtain the perfromance benefits of incremental updates.
+If the UI can be expressed in a way that is friendly to one of these automated incremental maintenance, perhaps as a declarative view of the data, we might be able to express user interfaces in a declarative, build-from-scratch way but obtain the performance benefits of incremental updates.
 Other efforts in this space, like the [Incremental](https://opensource.janestreet.com/incremental/) and [inc-dom](https://www.janestreet.com/tech-talks/intro-to-incr-dom/) libraries, have shown considerable success in these directions.
 
 While this seems like a purely technical benefit, we also believe that there are conceptual advantages to uniformity in the user interface stack.
-Many systems for incremental maintenance work by tracking data _provnenance_: they remember where a particular computation got its inputs, so that it knows when that computation needs to be re-run.
-We believe that understanding data provenance is also a fundamental tool in understanding app behaviour, for both app developers trying to debug the app and end users who are trying to extend it.
+Many systems for incremental maintenance work by tracking data _provenance_: they remember where a particular computation got its inputs, so that it knows when that computation needs to be re-run.
+We believe that understanding data provenance is also a fundamental tool in understanding app behavior, for both app developers trying to debug the app and end users who are trying to extend it.
 
 Imagine a browser-style developer console that allows you to click on a UI element and see what component it was generated from. In a system with end-to-end provenance, we could identify how this element came to be in a much deeper way, answering questions not just questions like "what component template generated this element?" but "what query results caused that component to be included?" and even "what event caused those query results to look this way?".
 We saw an early example of this in our query debugger view, but we believe that this can be taken much further. In many ways, data provenance tracking seems like a key step towards fulfilling the vision of [Whyline](https://www.cs.cmu.edu/~NatProg/whyline.html), where any piece of an app can be inspected to determine _why_ it's in that state.
@@ -730,7 +730,7 @@ These tools are highly productive in their domains; in our experience, they are 
 Nonetheless, they have significant technical and conceptual limitations; you can't use Airtable to write iTunes.
 We hope that by taking a step back and developing some key abstractions, we can achieve the full expressive power of "general purpose" programming tools and simplify them dramatically, for experts and novices alike.
 
-We're excited by this potential, and even more excited by the possiblity that we might already have the basic technological pieces to make that vision a reality.
+We're excited by this potential, and even more excited by the possibility that we might already have the basic technological pieces to make that vision a reality.
 
 ---
 
