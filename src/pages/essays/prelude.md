@@ -599,7 +599,7 @@ We think there are reasonable solutions to each of these performance challenges 
 This version of Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
 Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
 
-[TK insert picture]
+![](/assets/blog/prelude/component-tree.png)
 
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
 So, we could view the queries and template together as a large, tree-structured view of the data.
