@@ -58,13 +58,13 @@ In some sense, state management is the main thing that <em>makes an app an app</
 </p>
 
 In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embedded databases.
+Notably, shifting between these tends to be a heavy operation, rather than a core part of the app's business logic.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 Web apps have many redundant data representations spanning across the backend and frontend: for example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
 ![](/assets/blog/prelude/layers.png)
 
 While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. Even advanced developers invest enormous effort to create performant, reliable apps.
-
 
 <p>
 We think a promising approach to simplifying this stack is a <a href="https://www.inkandswitch.com/local-first/">local-first</a> architecture where all data is stored locally on the client, available to be freely read and modified at any time.
@@ -88,6 +88,20 @@ The power of client-side databases is already well-known in some contexts—many
 We think that <strong>many of the technical challenges in client-side application development can be solved by ideas originating in the databases community</strong>.
 As a simple example, frontend programmers commonly build data structures tailored to looking up by a particular attribute; databases solve precisely the same problem with <em>indexes</em>, which offer more powerful and automated solutions.
 We see especially great promise in applying recent research on better relational languages and fast incremental view maintenance to app development.
+</p>
+
+<p>
+In early discussions of this idea, we found that the word &ldquo;database&rdquo; can mean several different things.
+A traditional relational database management system like PostgreSQL is a bundle of several technologies: a storage engine, a query optimizer, a query execution engine, a data model, an access control manager, a concurrency control system, and so on.
+More exotic databases, like various NoSQL data stores, drop some of these features, but generally maintain a shared goal of persisting data.
+In our view, persistence is not the essential feature of a database.
+Instead, we take an inclusive definition, and use &ldquo;database&rdquo; to refer to any system that specializes in state management.
+<Aside>
+For example, we'd argue that a single shared JSON object or hash table that stores all of the data for an app is a type of a database, although not an especially featureful one.
+We think that being too prescriptive with the word database quickly ends up in &ldquo;is a taco a sandwich?&rdquo; territory.
+</Aside>
+In part, this is a short hand: we found &ldquo;state management system&rdquo; too wordy to use again and again.
+More importantly, we think that any system for managing state over time can benefit from adopting database technologies, even if the result is a non-central example of a database.
 </p>
 
 In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
@@ -126,7 +140,11 @@ Declarative queries express intent more concisely than imperative code, and allo
 </figure>
 
 This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use SQLite as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
-In client-side web development, the relational model is less common, although there have been prominent exceptions, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser.
+
+However, we've observed that the primary use of database queries is to manage _peristence_: that is, storing and retrieving data from disk.
+We imagine a more expensive role for the database, where even data that would normally be kept in an in-memory data structure would be logically maintained "in the database".
+In this senese, our approach is quite reminiscent of tools like [Datascript](https://github.com/tonsky/datascript), which expose a query interface over in-memory data structures.
+
 In many ways, powerful end-user focused tools like [Airtable](https://www.airtable.com/) are thematically similar: Airtable users express data dependencies in a spreadsheet-like formula language that operates primarily on tables rather than scalar data.
 We think relational queries in the client UI is a pattern that deserves to be more widely used.
 
@@ -188,10 +206,22 @@ With a fast database close at hand, this split doesn't need to exist. What if we
   </figcaption>
 </figure>
 
+<p>
 It would still be essential to configure state along various dimensions: persistence, sharing across users, etc.
+<Aside>
+Databases are hardly new technology, so it's interesting to wonder about why they've largely not been adopted to manage state in the way that we imagine.
+We aren't experts on database history, though, so this is somewhat speculative.
+<br /><br />
+We pin part of the blame on SQL: as we learned while building our prototype, it's just not terribly ergonomic for many of the tasks in app development.
+We also think that there's something of a chicken-and-egg problem.
+Because databases don't have the prominent role in app development that we imagine they could, no one appears to have built a database with the right set of performance tradeoffs for app-based workloads.
+For example, few databases are optimized for the low latencies that are necessary for interactive apps.
+Finally, we think that it might not have been possible to use a database for storing UI-specific, ephermeral state when many modern UI paradigms were developed.
+However, modern hardware is just really, really fast, which opens up new architectures.
+</Aside>
 But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
 This would make it easy to decide to persist some UI state, like the currently active tab in an app. UI state could even be shared among clients—in real-time collaborative applications, it's often useful to share cursor position, live per-character text contents, and other state that was traditionally relegated to local UI state.
-
+</p>
 
 ## Prototype system: SQLite + React
 
