@@ -657,8 +657,6 @@ These experiments make us particularly excited about the transferability of insi
 
 ### Taking "everything is a query" even further
 
-![](/assets/blog/prelude/one-query.png)
-
 Many modern app development frameworks adopt a sort of circular data flow: the UI is rendered as a pure function of some underlying state, and when the user performs some actions those trigger events, which cause cascading changes in the state and therefore the UI.
 Traditionally, there's a lot of work to propagate that change all the way through:
 1. Some kind of event manager needs to validate the event ("was it really safe to delete that playlist?") and apply it to the data.
@@ -671,6 +669,8 @@ In many modern apps, this is done using a frontend framework like React or Svelt
 
 In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
 If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
+
+![](/assets/blog/prelude/one-query.png)
 
 One could imagine pushing this "everything is a query" perspective even further, though.
 Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
