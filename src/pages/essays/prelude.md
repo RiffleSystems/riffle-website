@@ -621,7 +621,7 @@ As in React, our components are organized into a tree, where components can pass
 ![](/assets/blog/prelude/component-tree.png)
 
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
-So, we could view the queries and template together as a large, tree-structured view of the data. The tree of compoonents that define the app is a reactive, directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
+So, we could view the queries and template together as a large, tree-structured view of the data. The tree of components that define the app is a reactive, directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
 
 ![](/assets/blog/prelude/query-graph.png)
 
