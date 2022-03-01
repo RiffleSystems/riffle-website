@@ -10,13 +10,17 @@ const { post } = Astro.props;
   {post.draft ? (
     <div class="post-preview">
       <div class="publish-date">Soon</div>
-      <h1 class="title draft"> {post.title}</h1>
+      <div class="title draft">
+        <h1>{post.title}</h1>
+      </div>
     </div>
   ) : (
     <a href={post.url}>
       <div class="post-preview">
         <div class="publish-date">{post.publishDate}</div>
-        <h1 class="title">{post.title}</h1>
+        <div class="title">
+          <h1>{post.title}</h1>
+        </div>
       </div>
     </a>
   )}
@@ -33,7 +37,8 @@ const { post } = Astro.props;
 
   .post-preview {
     display: flex;
-    align-items: flex-start;
+    align-items: baseline;
+    font-family: var(--font-sans);
   }
 
   .title,
@@ -46,10 +51,14 @@ const { post } = Astro.props;
     font-weight: normal;
     color: var(--theme-text-lighter);
     margin-right: 0.5rem;
-    width: 12ch;
+    flex: 0 0 12ch;
   }
 
   .title {
+    flex: 1 0 0;
+  }
+
+  .title h1 {
     font-size: 1rem;
     font-weight: 400;
 
@@ -58,7 +67,7 @@ const { post } = Astro.props;
     color: var(--theme-text);
   }
 
-  .title.draft {
+  .title.draft h1 {
     color: var(--theme-text-lighter);
   }
 </style>
