@@ -739,6 +739,6 @@ We're excited by this potential, and even more excited by the possibility that w
 
 We'd love your feedback: we're reachable by email at [glitt@mit.edu](mailto:glitt@mit.edu) and [schiefer@mit.edu](mailto:schiefer@mit.edu), and on Twitter at [@geoffreylitt](https://twitter.com/geoffreylitt) and [@nschiefer](https://twitter.com/nschiefer)!
 
-*We're grateful for helpful feedback from Jamie Brandon, Sam Broner, Mike Cafarella, Adam Chlipala, Josh Horowitz, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Sam Madden, Rob Miller, Josh Pollock, Jalex Stark, Michael Stonebraker, Peter van Hardenberg, the MIT Software Design Group, and the MIT Data Systems Group as we developed the ideas in this essay.
+*We're grateful for helpful feedback from Jamie Brandon, Sam Broner, Mike Cafarella, Adam Chlipala, Jonathan Edwards, Josh Horowitz, Adam Jermyn, David Karger, Martin Kleppmann, Kevin Lynagh, Sam Madden, Rob Miller, Josh Pollock, Jalex Stark, Michael Stonebraker, Peter van Hardenberg, the MIT Software Design Group, and the MIT Data Systems Group as we developed the ideas in this essay.
 Geoffrey Litt was supported by an NSF GRFP Fellowship.
 Nicholas Schiefer was supported by a Simons Investigator Award.*
