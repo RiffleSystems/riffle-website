@@ -103,7 +103,9 @@ We started our project with some specific design principles we thought could sim
   <img src="/assets/blog/prelude/declarative.png" />
   <figcaption>
     <Markdown>
-      Testing a caption
+    A music app stores a list of tracks in a [normalized format](https://en.wikipedia.org/wiki/Database_normalization) with separate tables for tracks and albums, which are related by a foreign key.
+    This format has numerous advantages for data integrity, but the app wants to read the data in a joined format, where the album information is part of the same table as other track details: for example, the UI allows the user to filter on any column attribute, including the album title.
+    Traditionally, these calls would need to be baked into a single API endpoint, or reconstructed from several of them. In our architecture, the data dependencies are easier to understand because they are expressed declaratively.
     </Markdown>
   </figcaption>
 </figure>
