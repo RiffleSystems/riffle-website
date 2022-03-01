@@ -99,17 +99,6 @@ We started our project with some specific design principles we thought could sim
 
 ### Declarative queries clarify application structure
 
-<figure>
-  <img src="/assets/blog/prelude/declarative.png" />
-  <figcaption>
-    <Markdown>
-    A music app stores a list of tracks in a [normalized format](https://en.wikipedia.org/wiki/Database_normalization) with separate tables for tracks and albums, which are related by a foreign key.
-    The app reads the data in a joined format so that a user can filter on any track attribute, including the album tilte.
-    The relational query model makes these data dependencies clearer than other approaches, like nested API calls.
-    </Markdown>
-  </figcaption>
-</figure>
-
 Most applications have some canonical, normalized base state which must be further queried, denormalized, and reshaped before it can populate the user interface. For example, in a music app, if a list of tracks and albums is synced across clients, the UI may need to join across those collections and filter/group the data for display.
 
 In existing app architectures, a large amount of effort and code is expended on collecting and reshaping data.
@@ -123,6 +112,17 @@ As we'll discuss throughout this piece, SQL as a specific instantiation of the r
 In a local-first application, this doesn't need to be the case; all the queries can happen directly within the client. This raises the question: how should those queries be constructed and represented? We suspect that a good answer for many applications is to use a **relational query model** directly within the client UI code.
 Anyone who has worked with a relational database is familiar with the convenience of using declarative queries to express complex reshaping operations on data.
 Declarative queries express intent more concisely than imperative code, and allow a query planner to design an efficient execution strategy independently of the app developer's work.
+
+<figure>
+  <img src="/assets/blog/prelude/declarative.png" />
+  <figcaption>
+    <Markdown>
+    A music app stores a list of tracks in a [normalized format](https://en.wikipedia.org/wiki/Database_normalization) with separate tables for tracks and albums, which are related by a foreign key.
+    The app reads the data in a joined format so that a user can filter on any track attribute, including the album title.
+    The relational query model makes these data dependencies clearer than other approaches, like nested API calls.
+    </Markdown>
+  </figcaption>
+</figure>
 
 This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use SQLite as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
 In client-side web development, the relational model is less common, although there have been prominent exceptions, including [Datascript](https://github.com/tonsky/datascript), an in-memory Datalog implementation for UI development, and [SQL.js](https://sql.js.org/#/), which compiles SQLite to run in a browser.
