@@ -105,6 +105,7 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     padding: 3px 6px;
   }
 
+  /* Hyphenation settings borrowed from Ink & Switch */
   .content :global(p),
   .content :global(li) {
     text-align: justify;
@@ -130,6 +131,14 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     hyphenate-limit-lines: 1;
     hyphenate-limit-last: always;
     hyphenate-limit-zone: 10%;
+  }
+
+  .content :global(a) {
+    text-decoration: dotted underline;
+  }
+
+  .content :global(a:hover) {
+    text-decoration: solid underline;
   }
 
   /*
