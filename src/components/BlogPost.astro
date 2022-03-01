@@ -46,13 +46,7 @@ const { title, authors, publishDate, alt } = Astro.props;
 
   .content {
     margin-bottom: 8rem;
-    max-width: 70ch;
-  }
-
-  @media (max-width: 1000px) and (min-width: 768px) {
-    .content {
-      max-width: 60ch;
-    }
+    max-width: 75ch;
   }
 
   .content :global(main > * + *) {
@@ -163,9 +157,9 @@ const { title, authors, publishDate, alt } = Astro.props;
   @media (max-width: 1000px) and (min-width: 768px) {
     .content :global(aside),
     .content :global(.aside) {
-      margin-right: -45%;
+      margin-right: -40%;
       width: 35%;
-      padding-right: 0;
+      padding-right: 1rem;
     }
   }
 

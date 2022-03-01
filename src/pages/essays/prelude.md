@@ -29,9 +29,9 @@ One of the hardest parts of building an interactive application is _managing sta
 
 We're exploring an approach to simplifying state management: storing all application and UI state in a client-side _reactive relational_ database that provides a structured dataflow model. As an initial prototype, we have built a reactive layer around SQLite that populates data in a React app.
 
-We've found that managing all application state in a local database enables a fast reactivity loop where the contents of the UI depend entirely on the contents of the database. This provides a clearer mental model and debugging experience for developers, and has end-user benefits like persisting UI state that's traditionally treated as ephemeral.
+We've found that managing all application state in a local database enables a fast reactivity loop where the contents of the UI depend entirely on the contents of the database. This provides a clear mental model and debugging experience for developers, and has end-user benefits like persisting UI state.
 
-Ultimately, this approach suggests a powerful perspective: seeing an entire app as a reactive query over the underlying data. This reactive query could then be maintained _incrementally_ to achieve good performance while providing _unified data provenance_ through every layer from the event log to the displayed UI.
+Ultimately, this approach suggests a powerful perspective: seeing an entire app as a reactive query over the underlying data. This reactive query could then be maintained _incrementally_ for good performance while providing _ data provenance_ through every layer from the event log to the displayed UI.
 While we've only scratched the surface so far, our initial explorations suggest that a framework based on this perspective is both possible to build and radically simpler to use.
 </Markdown>
 </Abstract>
