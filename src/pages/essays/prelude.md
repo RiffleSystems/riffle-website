@@ -300,7 +300,7 @@ The UI looks like this:
 ![](/assets/blog/prelude/tracklist.png)
 
 <aside>
-Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms. In the future, we plan to use incremental view maintenance to keep queries maintained more efficiently.
+Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1ms.
 </aside>
 
 Importantly, this query doesn’t just execute once when the app boots. It’s a **reactive query**, so any time the relevant contents of the database change, the component will re-render with the new results. For example, when we add a new track to the database, the list updates automatically.
@@ -602,7 +602,7 @@ One challenge has been inter-process communication. When the reactive graph is r
 
 <aside>
 <Markdown>
-Some React alternatives like [Svelte](https://svelte.dev/) and [SolidJS](https://www.solidjs.com/) take a different approach: tracking fine-grained dependencies (either at compile-time or runtime) rather than diffing a virtual DOM. We think this style of reactivity could be a good fit for a Riffle state management framework built around incremental query maintenance, but for now we've chosen to prototype with React because it's the UI framework we're most familiar with.
+Some React alternatives like [Svelte](https://svelte.dev/) and [SolidJS](https://www.solidjs.com/) take a different approach: tracking fine-grained dependencies (either at compile-time or runtime) rather than diffing a virtual DOM. We think this style of reactivity could be a good fit for Riffle, but for now we've chosen to prototype with React because it's the UI framework we're most familiar with.
 </Markdown>
 </aside>
 
