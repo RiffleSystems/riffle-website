@@ -141,6 +141,18 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     text-decoration: solid underline;
   }
 
+  .content :global(table) {
+    table-layout: fixed;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .content :global(td) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   /*
   Based on Gwern's analysis of the Tufte-CSS side note feature.
   https://www.gwern.net/Sidenotes#tufte-css
