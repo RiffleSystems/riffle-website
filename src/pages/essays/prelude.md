@@ -3,6 +3,7 @@ setup: |
   import Layout from '../../layouts/BlogPost.astro'
   import SubscriptionBox from '../../components/SubscriptionBox.astro'
   import Abstract from '../../components/Abstract.astro'
+  import Aside from '../../components/Aside.astro'
   import { Markdown } from "astro/components";
 title: Building data-centric apps with a reactive relational database
 authors:
@@ -40,21 +41,20 @@ Today, building interactive apps is so hard that it's a specialized skill even a
 Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are disempowered entirely.
 Like many other researchers, we'd like to make app development radically more accessible to experts and novices alike.
 
-<aside>
-
+<p>
+Our key hypothesis is that app development is hard in large part because <strong>managing state is hard</strong>.
+<span class="aside">
 Here's an interesting thought experiment.
 Many software developers think that it is much easier to build command line tools than GUI apps, or even text-user interface (TUI) apps.
 Why is that?
-
+<br /><br />
 One answer is that command line tools tend to be _stateless_ in between user commands.
 A user gives the program some instructions, and it executes them, then discards all of the hidden state before returning control to the user.
 In contrast, most apps have some kind of persistent state--often quite a lot--that needs to be maintained and updated as the user takes actions.
-
-</aside>
-
-Our key hypothesis is that app development is hard in large part because **managing state is hard**.
+</span>
 Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propagating state.
-In some sense, state management is the main thing that _makes an app an app_, and distinguishes app development from related tasks like data visualization.
+In some sense, state management is the main thing that <em>makes an app an app</em>, and distinguishes app development from related tasks like data visualization.
+</p>
 
 In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embedded databases.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.

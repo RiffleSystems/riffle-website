@@ -122,9 +122,8 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
   Based on Gwern's analysis of the Tufte-CSS side note feature.
   https://www.gwern.net/Sidenotes#tufte-css
   */
-  .content :global(aside) {
+  .content :global(aside), .content :global(.aside) {
     float: right;
-    clear: right;
     margin-right: -60%;
     width: 50%;
     margin-top: 0.3rem;
@@ -132,6 +131,22 @@ const { title, authors, publishDate, heroImage, alt } = Astro.props;
     font-size: 80%;
     vertical-align: baseline;
     position: relative;
+  }
+
+  /* The mobile fallback: */
+  @media (max-width: 760px) {
+    .content :global(aside), .content :global(.aside) {
+      display: block;
+      float: none;
+      clear: both;
+      width: 100%;
+      margin: 1rem 0;
+      vertical-align: baseline;
+      position: relative;
+      background: var( --color-gray-100);
+      padding: 1rem;
+      border: solid thin var(--color-gray-200);
+    }
   }
 
   .content :global(figcaption) {
