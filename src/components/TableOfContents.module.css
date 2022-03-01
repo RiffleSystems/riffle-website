@@ -25,3 +25,7 @@
 .header {
   margin-top: 1rem;
 }
+
+.active {
+  font-weight: bold;
+}

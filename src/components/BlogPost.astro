@@ -21,7 +21,7 @@ const { title, authors, publishDate, astro } = Astro.props;
         <h1 class="title">{title}</h1>
         <AuthorList client:load {authors} />
       </header>
-      <TableOfContents client:idle headers={astro.headers} />
+      <TableOfContents client:load headers={astro.headers} />
       <main>
         <slot />
       </main>
