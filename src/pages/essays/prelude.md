@@ -19,7 +19,7 @@ authors:
 publishDate: 2 March 2022
 draft: false
 description: "We're exploring an approach to simplifying app development: storing all application and UI state in a client-side reactive relational database that provides a structured dataflow model."
-previewImage: "assets/blog/prelude/reactive.png"
+previewImage: "assets/essays/prelude/reactive.png"
 ---
 
 <Abstract>
@@ -62,7 +62,7 @@ Notably, shifting between these tends to be a heavy operation, rather than a cor
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 Web apps have many redundant data representations spanning across the backend and frontend: for example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
 
-![](/assets/blog/prelude/layers.png)
+![](/assets/essays/prelude/layers.png)
 
 While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. Even advanced developers invest enormous effort to create performant, reliable apps.
 
@@ -129,7 +129,7 @@ Declarative queries express intent more concisely than imperative code, and allo
 </p>
 
 <figure>
-  <img src="/assets/blog/prelude/declarative.png" />
+  <img src="/assets/essays/prelude/declarative.png" />
   <figcaption>
     <Markdown>
     A music app stores a list of tracks in a [normalized format](https://en.wikipedia.org/wiki/Database_normalization) with separate tables for tracks and albums, which are related by a foreign key.
@@ -166,7 +166,7 @@ Reactive queries can also depend on each other, and the system will decide on an
 </p>
 
 <figure>
-  <img src="/assets/blog/prelude/reactive.png" />
+  <img src="/assets/essays/prelude/reactive.png" />
   <figcaption>
     <Markdown>
     When queries happen locally, they are fast enough to run in the core reactive loop.
@@ -197,7 +197,7 @@ Traditionally, ephemeral "UI state," like the content of a text input box, is tr
 With a fast database close at hand, this split doesn't need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
 
 <figure>
-  <img src="/assets/blog/prelude/unified.png" />
+  <img src="/assets/essays/prelude/unified.png" />
   <figcaption>
     <Markdown>
     Conceptually, the state of each UI element is stored in the same reactive database as the normal app state, so the same tools can be used to inspect and modify them.
@@ -229,7 +229,7 @@ We built an initial prototype of Riffle: a state manager for web browser apps, i
 
 To run apps in the browser (pictured below), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
 
-![](/assets/blog/prelude/prototype.png)
+![](/assets/essays/prelude/prototype.png)
 
 For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already problem others have solved (e.g., James Long's approach in [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild)) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
 
@@ -322,11 +322,11 @@ const TrackList = () => {
 
 We can also represent this component visually. Currently it contains a single SQL query which depends on some global app state tables, as well as a view template.
 
-![](/assets/blog/prelude/component-1.png)
+![](/assets/essays/prelude/component-1.png)
 
 The UI looks like this:
 
-![](/assets/blog/prelude/tracklist.png)
+![](/assets/essays/prelude/tracklist.png)
 
 <p>
 Importantly, this query doesn’t just execute once when the app boots. It’s a <strong>reactive query</strong>, so any time the relevant contents of the database change, the component will re-render with the new results.
@@ -407,7 +407,7 @@ from (${get(tracksQuery.queryString)}) -- use tracks as a subquery
 
 This new query for sorted tracks depends on the local component state, as well as the original tracks query:
 
-![](/assets/blog/prelude/component-2.png)
+![](/assets/essays/prelude/component-2.png)
 
 This query is pretty ugly, especially since we're relying on string interpolation to connect two pieces of the data in the database.
 This is an unfortunate limitation of the tooling we've used for this experiment: SQLite's dialect of SQL has no way to dynamically control the sort oder using a relation, so we have to use Javascript string interpolation instead.
@@ -415,7 +415,7 @@ Ignoring the technical limitations, once can imagine writing this in a more rela
 
 Now if we populate the list of tracks from this query, when we click the table headers, we see the table reactively update:
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/sort.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/sort.mp4" playsinline="" />
 
 Of course, this is functionality that would be easy to build in a normal React app. What have we actually gained by taking the Riffle approach here?
 
@@ -460,11 +460,11 @@ const filteredTracks = db.query((get) => {
 
 Revisiting our graph of dependent queries, there’s now a new layer:
 
-![](/assets/blog/prelude/component-3.png)
+![](/assets/essays/prelude/component-3.png)
 
 Now, when the user types into the search box, their search term appears and filters the list of tracks:
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/search.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/search.mp4" playsinline="" />
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
@@ -474,7 +474,7 @@ It's unusual to send user input through the database before showing it on the sc
 
 As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/selection.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/selection.mp4" playsinline="" />
 
 ### Building virtualized list rendering from scratch
 
@@ -514,7 +514,7 @@ const filteredPagedTracks = db.query((get) => {
 ```
 This simple approach to virtualized list rendering turns out to be fast enough to support rapid scrolling over a large collection of tracks:
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/scroll.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/scroll.mp4" playsinline="" />
 
  Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view.
 
@@ -522,7 +522,7 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
 When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like TablePlus. This is helpful for debugging, but we can go further: we can even _modify the UI state_ of the app from the generic tool, e.g. changing the search term or sort order. The UI reacts as the database contents change:
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/interop.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/interop.mp4" playsinline="" />
 
 Of course, this modification could be done programmatically by a script or an alternate UI, rather than a person manually using a generic tool. By putting UI state in the database, we've effectively created a data-centric scripting API for interacting with the application.
 
@@ -538,7 +538,7 @@ We discuss this unconventional approach to interoperability [below](#data-based-
 
 So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, we've been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more. Here's a preview of what it looks like currently:
 
-![](/assets/blog/prelude/mytunes.png)
+![](/assets/essays/prelude/mytunes.png)
 
 So far, it appears that the basic model is viable, but much work remains to make the experience pleasant for an application developer. One challenge has been integrating Riffle's reactive queries with React's own reactivity in a way that doesn't create confusion for a developer. Another challenge has been maintaining low latency even as the app grows in complexity. Finally, there are many details we're still working on which aren't essential to the idea but which matter greatly for the developer experience, including API design, static types for query results, schema and migration management.
 
@@ -559,7 +559,7 @@ In addition, few frontend developers are deeply familiar with SQL, and it feels 
 However, we found that relational queries created intriguing opportunities to understand data transformations <em>dynamically</em> while an app is running. Because the underlying query model provides so much structure, we were able to prototype a primitive debugger which visualizes component state, query strings, and reactive dependencies, all live within the context of the running interface:
 </p>
 
-<video controls="controls" muted="muted" src="/assets/blog/prelude/debugger.mp4" playsinline="" />
+<video controls="controls" muted="muted" src="/assets/essays/prelude/debugger.mp4" playsinline="" />
 
 This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model. Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
@@ -666,12 +666,12 @@ This version of Riffle was built on top of React, but while React components are
 Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
 As in React, our components are organized into a tree, where components can pass down access to their queries (and state) to their children.
 
-![](/assets/blog/prelude/component-tree.png)
+![](/assets/essays/prelude/component-tree.png)
 
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
 So, we could view the queries and template together as a large, tree-structured view of the data. The tree of components that define the app is a reactive, directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
 
-![](/assets/blog/prelude/query-graph.png)
+![](/assets/essays/prelude/query-graph.png)
 
 <p>
 Since both the queries and the templates are pure functions of the base state, we can look at our entire component tree as one giant query that defines a particular view of the data.
@@ -717,7 +717,7 @@ In many modern apps, this is done using a frontend framework like React or Svelt
 In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
 If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
 
-![](/assets/blog/prelude/one-query.png)
+![](/assets/essays/prelude/one-query.png)
 
 One could imagine pushing this "everything is a query" perspective even further, though.
 Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
