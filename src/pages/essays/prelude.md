@@ -198,7 +198,7 @@ This would make it easy to decide to persist some UI state, like the currently a
 
 We built an initial prototype of Riffle: a state manager for web browser apps, implemented as a reactive layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. For rendering, we use React, which interacts with Riffle via custom hooks.
 
-To run apps in the browser (pictured above), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
+To run apps in the browser (pictured below), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
 
 ![](/assets/blog/prelude/prototype.png)
 
