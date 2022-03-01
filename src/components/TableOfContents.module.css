@@ -1,3 +1,9 @@
+@media (max-width: 1000px) {
+  .toc {
+    display: none;
+  }
+}
+
 .toc {
   position: sticky;
   top: 0;
