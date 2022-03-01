@@ -11,7 +11,6 @@ export const TableOfContents = (props) => {
       return true;
     } else if (header.depth === 3) {
       const headerIndex = headers.indexOf(header);
-      console.log({ headerIndex, sliced: headers.slice(headerIndex) });
       const parentHeader = headers
         .slice(0, headerIndex)
         .filter((h) => h.depth === 2)
@@ -21,7 +20,6 @@ export const TableOfContents = (props) => {
   };
 
   useEffect(() => {
-    console.log("hello world");
     const observer = new IntersectionObserver((entries) => {
       if (entries.length > 0) {
         const activeId = entries[0].target.getAttribute("id");
