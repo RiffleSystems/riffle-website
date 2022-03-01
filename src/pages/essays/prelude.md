@@ -602,7 +602,7 @@ Conceptually, a component is a combination of some queries that implement the da
 ![](/assets/blog/prelude/component-tree.png)
 
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
-So, we could view the queries and template together as a large, tree-structured view of the data.
+So, we could view the queries and template together as a large, tree-structured view of the data. The entire app is a directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
 
 <aside>
 <Markdown>
