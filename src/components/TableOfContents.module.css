@@ -1,0 +1,27 @@
+.toc {
+  position: sticky;
+  top: 0;
+  padding: 1rem 0;
+  float: right;
+  margin-right: -60%;
+  width: 50%;
+  margin-top: 0.3rem;
+  margin-bottom: 0;
+  font-size: 80%;
+  vertical-align: baseline;
+  background: var(--color-gray-50);
+  z-index: 2;
+  border-bottom: solid thin var(--color-gray-300);
+}
+
+.toc .tocHeaderLink {
+  text-decoration: none !important;
+}
+
+.subheader {
+  margin-left: 1rem;
+}
+
+.header {
+  margin-top: 1rem;
+}

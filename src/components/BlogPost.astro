@@ -1,14 +1,16 @@
 ---
 import { AuthorList } from "./AuthorList.jsx";
+import { TableOfContents } from "./TableOfContents.jsx";
 
 export interface Props {
   title: string;
   authors: [{ name: string; link: string } | [{ name: string; link: string }]];
   publishDate: string;
   alt: string;
+  astro: any;
 }
 
-const { title, authors, publishDate, alt } = Astro.props;
+const { title, authors, publishDate, astro } = Astro.props;
 ---
 
 <div class="layout">
@@ -19,6 +21,7 @@ const { title, authors, publishDate, alt } = Astro.props;
         <h1 class="title">{title}</h1>
         <AuthorList client:load {authors} />
       </header>
+      <TableOfContents client:idle headers={astro.headers} />
       <main>
         <slot />
       </main>
