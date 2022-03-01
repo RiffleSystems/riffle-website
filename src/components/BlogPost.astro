@@ -5,27 +5,16 @@ export interface Props {
   title: string;
   authors: [{ name: string; link: string } | [{ name: string; link: string }]];
   publishDate: string;
-  heroImage: string;
   alt: string;
 }
 
-const { title, authors, publishDate, heroImage, alt } = Astro.props;
+const { title, authors, publishDate, alt } = Astro.props;
 ---
 
 <div class="layout">
   <article class="content">
     <div>
       <header>
-        {heroImage && (
-          <img
-            width="720"
-            height="420"
-            class="hero-image"
-            loading="lazy"
-            src={heroImage}
-            alt={alt}
-          />
-        )}
         <p class="publish-date">{publishDate}</p>
         <h1 class="title">{title}</h1>
         <AuthorList client:load {authors} />
