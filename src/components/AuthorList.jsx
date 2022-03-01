@@ -23,7 +23,6 @@ export const AuthorList = (props) => {
       style="margin-top: 1rem; font-family: var(--font-sans); font-size: 1rem;"
       class="authors"
     >
-      {hasEqualOrder && <aside style="color: #999">* equal contribution</aside>}
       {flattenedAuthors.slice(0, -1).map((author) => (
         <span>
           <Author {...author} />,{" "}
@@ -31,6 +30,7 @@ export const AuthorList = (props) => {
       ))}
       <span>and </span>
       <Author {...flattenedAuthors.slice(-1)[0]} />
+      {hasEqualOrder && <span class="aside" style="color: #999">* equal contribution</span>}
     </div>
   );
 };
