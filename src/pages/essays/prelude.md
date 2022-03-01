@@ -12,7 +12,7 @@ authors:
     - name: Nicholas Schiefer
       email: schiefer@mit.edu
   - name: Johannes Schickling
-    email:
+    email: schickling.j@gmail.com
   - name: Daniel Jackson
     email: dnj@csail.mit.edu
 publishDate: 28 Feb 2022
