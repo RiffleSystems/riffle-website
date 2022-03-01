@@ -131,8 +131,6 @@ We think relational queries in the client UI is a pattern that deserves to be mo
 
 ### Fast reactive queries provide a clean mental model
 
-![](/assets/blog/prelude/reactive.png)
-
 A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. Frameworks like [React](https://reactjs.org/), [Svelte](https://svelte.dev/), and [Solid]() have popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request like reloading a page; doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client. This limits the scope of the reactivity: the UI is guaranteed to show the latest local state, but not the latest state from the database.
@@ -148,6 +146,17 @@ This is also related to cloud reactive datastores like [Firebase](https://fireba
 </aside>
 
 In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register _reactive queries_, where the system guarantees that they will be updated in response to changing data. Reactive queries can also depend on each other, and the system will decide on an efficient execution order and ensure data remains correctly updated. The UI is now guaranteed to accurately reflect the latest contents of the database at all times.
+
+<figure>
+  <img src="/assets/blog/prelude/reactive.png" />
+  <figcaption>
+    <Markdown>
+    When queries happen locally, they are fast enough to run in the core reactive loop.
+    In the span of a single frame (16 milliseconds on a standard 60 Hz display), we have enough time to ① write a new track to the database, ② re-run the queries that change because of that new track, and ③ propagate those updates to the UI.
+    From the point of view of the developer and user, there was no intermediate invalid state.
+    </Markdown>
+  </figcaption>
+</figure>
 
 Low latency is a critical property for reactive systems. A small spreadsheet typically updates instantaneously, meaning that the user never needs to worry about stale data; a few seconds of delay when propagating a change would be a different experience altogether. The goal of a UI state management system should be to converge all queries to their new result within a single frame after a write; this means that the developer doesn't need to think about temporarily inconsistent loading states, and the user gets fast software.
 
@@ -165,11 +174,20 @@ This performance budget is ambitious, but there are reasons to believe it's achi
 
 ### Managing all state in one system provides greater flexibility
 
-![](/assets/blog/prelude/unified.png)
 
 Traditionally, ephemeral "UI state," like the content of a text input box, is treated as separate from "application state" like the list of tracks in a music collection. One reason for this is performance characteristics—it would be impractical to have a text input box depend on a network roundtrip, or even blocking on a disk write.
 
 With a fast database close at hand, this split doesn't need to exist. What if we instead combined both "UI state" and "app state" into a single state management system? This unified approach would help with managing a reactive query system—if queries need to react to UI state, then the database needs to somehow be aware of that UI state. Such a system could also present a unified system model to a developer, e.g. allow them to view the entire state of a UI in a debugger.
+
+<figure>
+  <img src="/assets/blog/prelude/unified.png" />
+  <figcaption>
+    <Markdown>
+    Conceptually, the state of each UI element is stored in the same reactive database as the normal app state, so the same tools can be used to inspect and modify them.
+    This makes it especially easy to manage interactions between UI elements and core objects in the app's domain (e.g., tracks and albums in a music app).
+    </Markdown>
+  </figcaption>
+</figure>
 
 It would still be essential to configure state along various dimensions: persistence, sharing across users, etc.
 But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
@@ -178,11 +196,11 @@ This would make it easy to decide to persist some UI state, like the currently a
 
 ## Prototype system: SQLite + React
 
-![](/assets/blog/prelude/prototype.png)
-
 We built an initial prototype of Riffle: a state manager for web browser apps, implemented as a reactive layer over the SQLite embedded relational database. The reactive layer runs in the UI thread, and sends queries to a SQLite database running locally on-device. For rendering, we use React, which interacts with Riffle via custom hooks.
 
 To run apps in the browser (pictured above), we run the SQLite database in a web worker and persist data to IndexedDB, using [SQL.js](https://sql.js.org) and [absurd-sql](https://github.com/jlongster/absurd-sql). We also have a desktop app version based on [Tauri](https://tauri.studio/) (an Electron competitor that uses native webviews instead of bundling Chromium); in that architecture we run the frontend UI in a webview and run SQLite in a native process, persisting to the device filesystem.
+
+![](/assets/blog/prelude/prototype.png)
 
 For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already problem others have solved (e.g., James Long's approach in [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild)) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
 
@@ -598,11 +616,13 @@ We think there are reasonable solutions to each of these performance challenges 
 
 This version of Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
 Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
-
+As in React, our components are organized into a tree, where components can pass down access to their queries (and state) to their children.
 ![](/assets/blog/prelude/component-tree.png)
 
 In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
-So, we could view the queries and template together as a large, tree-structured view of the data. The entire app is a directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
+So, we could view the queries and template together as a large, tree-structured view of the data. The tree of compoonents that define the app is a reactive, directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
+
+![](/assets/blog/prelude/query-graph.png)
 
 <aside>
 <Markdown>
@@ -610,10 +630,7 @@ This perspective ends up looking a lot like [Relational UI](https://www.scattere
 </Markdown>
 </aside>
 
-![](/assets/blog/prelude/query-graph.png)
-
-We can extend this perspective even further: each component takes some arguments (props, in React parlance), which might themselves be queries, but are also a pure function of the data.
-We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
+Since both the queries and the templates are pure functions of the base state, we can look at our entire component tree as one giant query that defines a particular view of the data.
 This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
 In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
