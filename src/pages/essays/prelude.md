@@ -614,6 +614,8 @@ We can extend this perspective even further: each component takes some arguments
 We can therefore see the entire component tree in the same way: it's one giant query that defines a particular view of the data.
 This view is precisely analgous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
+![](/assets/blog/prelude/query-graph.png)
+
 In this light, the problem of maintaing the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
