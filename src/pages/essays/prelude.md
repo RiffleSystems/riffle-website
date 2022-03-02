@@ -482,7 +482,11 @@ As another example of how fast a local datastore can be, we can store the curren
 
 Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below.
 
-With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code. We start by representing the current scroll position in the list as a new state column on the track list component, `scrollIndex`. As the user scrolls, we use an event handler on the DOM to update this value, essentially mirroring the stateful scroll position of the DOM into the database. We also throttle updates to happen at most once every 50ms to avoid overwhelming the database with writes during rapid scrolling.
+<Aside>
+In our current prototype, we had to throttle database writes so the new scroll state only gets written to the database once every 50ms. In <a href="#performance-is-a-challenge-with-existing-tools">our findings</a> we discuss sources of these performance limitations in the prototype; in a future system it would be better to remove this throttling.
+</Aside>
+
+With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code. We start by representing the current scroll position in the list as a new state column on the track list component, `scrollIndex`. As the user scrolls, we use an event handler on the DOM to update this value, essentially mirroring the stateful scroll position of the DOM into the database.
 
 ```jsx
 import { throttle } from 'lodash'
