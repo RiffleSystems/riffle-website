@@ -30,10 +30,10 @@ Even skilled programmers who don't specialize in app development struggle to bui
 We think that a lot of what makes app development hard is _managing state_: reacting and propogating the necessary changes as the user takes actions.
 
 We're exploring a new way to manage data in apps by storing all app state--including the state of the UI--in a single reactive _database_.
-Instead of imperatively fetching data from the database, the user writes _reactive queries_ that update with fresh results whenever their dependencies change, and the database handles everything else.
+Instead of imperatively fetching data from the database, the user writes _reactive queries_ that update with fresh results whenever their dependencies change.
 
 As an initial prototype, we have built a reactive layer around SQLite that populates data in a React app, and used it to build a music library app.
-We've learned a lot from trying to apply our big vision to a real app: our essays shares some of what we've learned and where we want to take the project next.
+We've learned a lot from trying to apply our big vision to a real app; this essay shares some of what we've learned and where we want to take the project next.
 
 Even in our limited prototype, we've found that _thinking of apps as queries over data_ is a powerful frame, opening up new approaches to debugging, persistence, and cross-app interoperability.
 We've also learned some hard lessons about the limitations of SQL and the performance challenges of working with data on the web.
@@ -41,7 +41,7 @@ We've also learned some hard lessons about the limitations of SQL and the perfor
 Together, our ideas and experiments suggest that we could feasibly take this frame even further.
 We sketch a vision for thinking of every layer of an app, from the event log to the pixels on the screen, as pieces of a single large query.
 Furthermore, we believe that the key building blocks for building such a system already exist in tools developed for incremental view maintenance and fine-grained data provenance tracking.
-While we've just scratched the surface so far, we think that a framework based on these ideas is both possible to build and radically simpler to use.
+While we've only scratched the surface so far, we think that a framework based on these ideas would be both possible to build and radically simpler to use.
 </Markdown>
 </Abstract>
 
