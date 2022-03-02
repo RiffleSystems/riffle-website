@@ -654,12 +654,6 @@ While we tried to stick to well-known technologies like SQL in our prototype, we
 
 In principle, declarative queries should be a step towards good app performance by default. The application developer can model the data conceptually, and it is up to the database to find an efficient way to implement the read and write access patterns of the application. In practice, our results have been mixed.
 
-<aside>
-<Markdown>
-
-</Markdown>
-</aside>
-
 <p>
 On the bright side, the core database itself has been mostly fast.
 <Aside>
