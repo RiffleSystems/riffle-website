@@ -107,7 +107,7 @@ More importantly, we think that any system for managing state over time can bene
 In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
 So far, we've formulated some [design principles](#principles) for applying database technologies to app development, and built an [initial prototype](#prototype-system-sqlite--react) using existing tools like SQLite and React.
 Although our prototype doesn't yet express the entirety of the design principles that we started with, we've learned a lot from using it to build apps, and we share some of our concrete [findings](#findings) in this essay.
-In sum, we think our early explorations suggest a [viable path toward making app development simpler](#towards-a-reactive-relational-approach-to-state-management).
+In sum, our early explorations suggest a [viable path toward making app development much simpler](#towards-a-reactive-relational-approach-to-state-management).
 
 ## Principles
 
@@ -172,7 +172,7 @@ Reactive queries can also depend on each other, and the system will decide on an
   <figcaption>
     <Markdown>
     When queries happen locally, they are fast enough to run in the core reactive loop.
-    In the span of a single frame (16 milliseconds on a standard 60 Hz display), we have enough time to ① write a new track to the database, ② re-run the queries that change because of that new track, and ③ propagate those updates to the UI.
+    In the span of a single frame (16ms on a 60Hz display, or even 8ms on modern 120Hz display), we have enough time to ① write a new track to the database, ② re-run the queries that change because of that new track, and ③ propagate those updates to the UI.
     From the point of view of the developer and user, there was no intermediate invalid state.
     </Markdown>
   </figcaption>
@@ -361,7 +361,7 @@ In our example scenario, our app is simple enough so far that we only need to ma
 In our code, we can use Riffle's `useComponentState` hook to access getter and setter functions to manipulate the state. This hook resembles React's `useState` hook but is implemented in terms of simple database queries. The getters are reactive queries that incorporate the key for this component instance; the setters are syntax sugar for update statements which also incorporate the component key.
 
 ```jsx
-import { db, useComponentState } from 'riffle'
+import { useComponentState } from 'riffle'
 
 const TrackListSchema = {
   componentType: "TrackList",
@@ -372,7 +372,7 @@ const TrackListSchema = {
 }
 
 const TrackList = () => {
-  const [state, set] = useComponentState(TrackListSchema, { key: Singleton })
+  const [state, set] = useComponentState(TrackListSchema, { key: "singleton" })
   const tracks = useQuery(tracksQuery)
 
   return <table>
