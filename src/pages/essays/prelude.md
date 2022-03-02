@@ -106,7 +106,7 @@ More importantly, we think that any system for managing state over time can bene
 
 In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
 So far, we've formulated some [design principles](#principles) for applying database technologies to app development, and built an [initial prototype](#prototype-system-sqlite--react) using existing tools like SQLite and React.
-Although our prototype doesn't yet express the entirety of the design principles that we started with, we've learned a lot from using it to build apps, and we share some of our concrete [findings](#findings) in this essay.
+Although our prototype has many limitations and doesn't yet express the entirety of the design principles that we started with, we've learned a lot from using it to build apps, and we share some of our concrete [findings](#findings) in this essay.
 In sum, our early explorations suggest a [viable path toward making app development much simpler](#towards-a-reactive-relational-approach-to-state-management).
 
 ## Principles
