@@ -53,8 +53,16 @@ We think that it should be possible to make app development radically more acces
 
 Consider a music player app like iTunes.
 The core user interface is simple: it manages a music collection and displays a variety of custom views organized by various properties like the album, artist, or genre.
-As anyone who has tried to _build_ an app like that knows, that conceptual simplicity doesn't mean that the app is actually easy to build.
-As a result, we think that there are millions of these "data-centric" apps that don't exist because they are too hard to build relative to the size of their audience.
+However, the conceptual simplicity of the UI doesn't mean that the app is actually easy to build. We think that there are millions of these "data-centric" apps that don't exist because they are too hard to build relative to the size of their audience.
+
+<figure>
+  <img src="/assets/essays/prelude/itunes.png" />
+  <figcaption>
+    <Markdown>
+    iTunes is a representative example of a _data-centric app_.
+    </Markdown>
+  </figcaption>
+</figure>
 
 <p>
 In data-centric apps, <strong>much of the complexity of building and modifying the app comes from managing and propagating state.</strong>
