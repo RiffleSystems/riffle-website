@@ -507,28 +507,6 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
  Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view.
 
-### Editing data across apps
-
-One possibility we found particularly intriguing about our prototype was the ability to edit data across apps, using the database as an intermediary.
-
-When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like [TablePlus](https://tableplus.com/). This is helpful for debugging, but we can go further: we can even _modify the UI state_ of the app from the generic tool, e.g. changing the search term or sort order. In the video below, we can see the UI reacts as the database contents change.
-
-<video controls="controls" muted="muted" src="/assets/essays/prelude/interop.mp4" playsinline="" />
-
-<Aside>
-In TablePlus, the user must explicitly commit each change by pressing Cmd+S; the music app reacts quickly after the user commits the change.
-</Aside>
-
-Of course, this modification could be done programmatically by a script or an alternate UI, rather than a person manually using a generic tool. By putting UI state in the database, we've effectively created a data-centric scripting API for interacting with the application.
-
-We've also explored this idea for integrating with external services.
-We've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API.
-However, these imperative calls are tricky: for example, they implicitly depend on the order in which things happen, and that order is poorly defined in an asynchronous environment.
-Instead we've tried to model this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
-When the user performs an action, we write that action to the database as an event, which is then synced by a background daemon using the imperative Spotify APIs.
-Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write.
-We discuss this unconventional approach to interoperability [below](#data-based-interoperability-offers-advantages-over-action-based-apis).
-
 ### Building a complex app?
 
 So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, [one of us](https://twitter.com/schickling) has been using a version of Riffle to build a full-featured music manager application called MyTunes. It has a richer UI for playlists, albums, artists, current play state, and more. It also syncs data from Spotify and streams music via their API, so we've been using it as a daily music player in place of Spotify. Here's a recent screenshot:
@@ -585,6 +563,31 @@ It's interesting to compare this set-wise debugging from debuggers in imperative
 Imperative debuggers can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
 The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
+### Data-centric design encourages interoperability
+
+One quality we found particularly intriguing in our prototype was the ability to control the app from the outside, using the database as an intermediary.
+
+When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like [TablePlus](https://tableplus.com/). This is helpful for debugging, because we can inspect any app or UI state. But we can also go even further: we can _modify the UI state_ of the app! In the video below, we can see the UI reacts as we use TablePlus to edit a search term and change the sort order:
+
+<video controls="controls" muted="muted" src="/assets/essays/prelude/interop.mp4" playsinline="" />
+
+<Aside>
+In TablePlus, the user must explicitly commit each change by pressing Cmd+S. After the user commits the change, the music app reacts quickly.
+</Aside>
+
+This kind of editing doesn't need to be done manually by a human using a generic UI; it could also be done programmatically by a script or an alternate UI view. We've effectively created a data-centric scripting API for interacting with the application, without the original application needing to explicitly work to expose an API. We think this points towards fascinating possibilities for interoperability.
+
+Since the introduction of object-oriented programming, most interoperability has been “verb-based”: that is, based on having programs call into each other using APIs. Indeed, new programmers are often taught to hide data behind APIs as much as possible in order to encapsulate state. Unfortunately, <a href="https://twitter.com/andy_matuschak/status/1452438198668328960">verb-based APIs create an unfortunate n-to-n problem</a>: every app needs to know how to call the APIs of every other app. In contrast, data-based interoperability can use the shared data directly: once an app knows how to read a data format, it can read that data regardless of which app produced it.
+
+Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
+
+We've also explored this idea for integrating with external services.
+In the full MyTunes app, we've built features for playing music on Spotify; normally this would involve the application making imperative calls to the Spotify API.
+However, getting these imperative calls are tricky—for example, what happens if around the same time the user hits Play in MyTunes, and Pause in the Spotify app itself?
+We've taken a different approach of modeling this as a problem of shared state: both our application and Spotify are reading/writing from the same SQLite database.
+When the user performs an action, we write that action to the database as an event, which is then synced by a background daemon using the imperative Spotify APIs.
+Conversely, when something happens in Spotify, we write an event to our local database, and the app updates reactively as it would with an app-created write. Overall, we think shared state is a better abstraction than message passing for many instances of integrations with external services.
+
 ### Users and developers benefit from unified state
 
 We found it nice to treat all data, whether ephemeral "UI data" or persistent "app data", in a uniform way, and to think of persistence as a lightweight property of some data, rather than a foundational part of the data model.
@@ -597,23 +600,6 @@ We often found ourselves digging through the database to delete the offending ro
 This did lead to another observation, though: in this model, we can decouple _restarting the app_ from _resetting the state_. Since the system is entirely reactive, we could reset the UI state completely without closing the app.
 
 Another challenge was fitting compound UI state like nested objects or sequences into the relational model. For now, we've addressed this challenge by serializing this kind of state into a single scalar value within the relational database. However, this approach feels haphazard, and it seems important to find more ergonomic relational patterns for storing common kinds of UI state.
-
-### Migrations are a challenge
-
-In our experience, migrations are a consistent pain when working with SQL databases.
-However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
-
-<p>
-In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the program is re-run.
-Our prototype stores all state, including ephemeral UI state that would normally live exclusively in the main object graph, in the database, so any change to the layout of that ephemeral state forced a migration.
-<Aside>
-This problem is reminiscent of some of the challenges of Smalltalk images, where code was combined with state snapshots.
-</Aside>
-In most cases, we chose to simply delete the relevant tables and recreate them while in development, which essentially recreates the traditional workflow with ephemeral state.
-</p>
-
-Of course, Riffle is not the first system to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
-We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
 ### SQL is a mediocre language for UI development
 
@@ -680,17 +666,22 @@ Rendering to the DOM has been another source of performance problems. We've seen
 
 We think there are reasonable solutions to each of these performance challenges in isolation, but we suspect the best solution is a more integrated system that doesn't build on existing layers like SQlite and React.
 
-### Data-based interoperability offers advantages over action-based APIs.
+### Migrations are a challenge
 
-Since the introduction of object-oriented programming, most interoperability has been “verb-based”: that is, based on having programs call into each other using APIs. Indeed, new programmers are often taught to hide data behind APIs as much as possible in order to encapsulate state.
+In our experience, migrations are a consistent pain when working with SQL databases.
+However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
 
-In our prototype, we found dramatic benefits to turning this paradigm on its head. Instead of using verb-based APIs for interoperability, we used *shared data representations* to create “noun-based” interoperability surfaces. We observed three major advantages to this approach.
+<p>
+In a more traditional architecture, state that's managed by the frontend gets automatically discarded every time the program is re-run.
+Our prototype stores all state, including ephemeral UI state that would normally live exclusively in the main object graph, in the database, so any change to the layout of that ephemeral state forced a migration.
+<Aside>
+This problem is reminiscent of some of the challenges of Smalltalk images, where code was combined with state snapshots.
+</Aside>
+In most cases, we chose to simply delete the relevant tables and recreate them while in development, which essentially recreates the traditional workflow with ephemeral state.
+</p>
 
-First, we found it very decouple read- and write-paths: the source application can write the data in a convenient format, while the target application can query it to obtain data in a different convenient format. Often, the most convenient write path is an event log, but consuming an event log is quite difficult for other apps.
-
-Second, <a href="https://twitter.com/andy_matuschak/status/1452438198668328960">verb-based APIs create an unfortunate n-to-n problem</a>: every app needs to know how to call the APIs of every other app. In contrast, data-based interoperability can use the shared data directly: once an app knows how to read a data format, it can read that data regardless of which app produced it.
-
-Third, we found that treating the data format as a core interface for an app solves many problems that are plague modern apps. Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
+Of course, Riffle is not the first system to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
+We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
 ## Towards a more radical approach
 
