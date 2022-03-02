@@ -24,12 +24,18 @@
   text-decoration: none !important;
 }
 
+.toc .tocHeaderLink:hover {
+  text-decoration: solid underline !important;
+}
+
 .subheader {
   margin-left: 1rem;
+  margin-top: 0.4rem;
+  line-height: 1;
 }
 
 .header {
-  margin-top: 1rem;
+  margin-top: 0.3rem;
 }
 
 .active {

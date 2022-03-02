@@ -20,12 +20,16 @@ export const TableOfContents = (props) => {
   };
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      if (entries.length > 0) {
-        const activeId = entries[0].target.getAttribute("id");
-        setActiveSlug(activeId);
-      }
-    });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.length > 0) {
+          const activeId = entries[0].target.getAttribute("id");
+          setActiveSlug(activeId);
+        }
+      },
+      // Only count as visible when it's more than 1/3 from bottom of page
+      { rootMargin: "0px 0px -33% 0px" }
+    );
 
     // Track all sections that have an `id` applied
     document.querySelectorAll("h2[id]").forEach((section) => {
@@ -38,11 +42,13 @@ export const TableOfContents = (props) => {
       {headers
         .filter((h) => isHeaderVisible(h))
         .map((header) => (
-          <div className={styles.tocHeader}>
+          <div
+            className={header.depth === 3 ? styles.subheader : styles.header}
+          >
             <a
               className={`${styles.tocHeaderLink} ${
-                header.depth === 3 ? styles.subheader : styles.header
-              } ${header.slug === activeSlug ? styles.active : ""}`}
+                header.slug === activeSlug ? styles.active : ""
+              }`}
               href={`#${header.slug}`}
             >
               {header.text}
