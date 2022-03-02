@@ -531,15 +531,17 @@ We discuss this unconventional approach to interoperability [below](#data-based-
 
 ### Building a complex app?
 
-So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, [one of us](https://twitter.com/schickling) has been using a version of Riffle to build a full-featured music manager application called MyTunes, which has richer UI for playlists, albums, artists, current play state, and more. Here's a preview of what it looks like currently:
+So far we've shown a very simple example, but how does this approach actually scale up to a more complex app? To answer this question, [one of us](https://twitter.com/schickling) has been using a version of Riffle to build a full-featured music manager application called MyTunes. It has a richer UI for playlists, albums, artists, current play state, and more. It also syncs data from Spotify and streams music via their API, so we've been using it as a daily music player in place of Spotify. Here's a recent screenshot:
 
 ![](/assets/essays/prelude/mytunes.png)
 
-So far, it appears that the basic model is viable, but much work remains to make the experience pleasant for an application developer. One challenge has been integrating Riffle's reactive queries with React's own reactivity in a way that doesn't create confusion for a developer. Another challenge has been maintaining low latency even as the app grows in complexity. Finally, there are many details we're still working on which aren't essential to the idea but which matter greatly for the developer experience, including API design, static types for query results, schema and migration management.
+Building a more complex app has revealed several challenges. One issue has been integrating Riffle's reactive queries with React's own reactivity in a way that doesn't create confusion for a developer. Another challenge has been maintaining low latency even as the app grows in complexity. Finally, there are many details which matter greatly for day-to-day developer experience, including API design, TypeScript type inference for query results, and schema/migration management.
+
+We're still working through many of these challenges, so we wouldn't claim yet that our prototype offers a great experience for developing a full-featured app. However, we have been encouraged that, so far, the overall reactive relational model does seem viable for scaling beyond a tiny toy app.
 
 ## Findings
 
-Overall, working with our prototype system made us optimistic that this is a promising direction for simplifying application development. At the same time, it also clarified some of the challenges to making this approach truly work. Here are some of our reflections.
+Here are some reflections from working with our prototype system.
 
 ### Structured queries make it easier to understand an app
 
