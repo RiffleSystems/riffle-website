@@ -1,22 +1,28 @@
-@media (max-width: 1500px) {
-  .toc {
-    display: none;
-  }
-}
-
 .toc {
   position: sticky;
   top: 5rem;
   padding: 1rem 0.5rem 1rem 1%;
   float: left;
-  margin-left: -53%;
-  width: 46%;
+  margin-left: -45%;
+  width: 38%;
   margin-top: 0.3rem;
   margin-bottom: 0;
   font-size: 80%;
-  border-right: solid thin var(--color-gray-200);
   border-bottom: none;
   min-height: 25rem;
+}
+
+@media (min-width: 1600px) {
+  .toc {
+    margin-left: -60%;
+    width: 46%;
+  }
+}
+
+@media (max-width: 1400px) {
+  .toc {
+    display: none;
+  }
 }
 
 .toc .tocHeaderLink {
