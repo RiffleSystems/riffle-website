@@ -150,7 +150,7 @@ Declarative queries express intent more concisely than imperative code, and allo
   </figcaption>
 </figure>
 
-This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use SQLite as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
+This is an uncontroversial stance in backend web development where SQL is commonplace. It's also a typical approach in desktop and mobile development—many complex apps use [SQLite](https://www.sqlite.org/index.html) as an embedded datastore, including Adobe Lightroom, Apple Photos, Google Chrome, and [Facebook Messenger](https://engineering.fb.com/2020/03/02/data-infrastructure/messenger/).
 
 However, we've observed that the primary use of database queries is to manage _peristence_: that is, storing and retrieving data from disk.
 We imagine **a more expansive role for the relational database**, where even data that would normally be kept in an in-memory data structure would be logically maintained "in the database".
@@ -485,7 +485,7 @@ In our experience so far, SQLite can run most queries fast enough to make this a
 Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below.
 
 <Aside>
-In our current prototype, we had to throttle database writes so the new scroll state only gets written to the database once every 50ms. In <a href="#performance-is-a-challenge-with-existing-tools">our findings</a> we discuss sources of these performance limitations in the prototype; in a future system it would be better to remove this throttling.
+In our current prototype, we had to throttle database writes so the new scroll state only gets written to the database once every 50ms. In <a href="#performance-is-a-challenge-with-existing-tools">our findings</a> we discuss sources of these performance limitations; in a future system we'd like to remove this throttling.
 </Aside>
 
 With Riffle, implementing a simple virtualized list view from scratch only takes a few lines of code. We start by representing the current scroll position in the list as a new state column on the track list component, `scrollIndex`. As the user scrolls, we use an event handler on the DOM to update this value, essentially mirroring the stateful scroll position of the DOM into the database.
