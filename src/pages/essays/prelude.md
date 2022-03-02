@@ -233,7 +233,7 @@ To run apps in the browser (pictured below), we run the SQLite database in a web
 
 ![](/assets/essays/prelude/prototype.png)
 
-For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by reusing existing tools like SQLite, and by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a basic SQLite-based CRDT across devices is already problem others have solved (e.g., James Long's approach in [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild)) so we're confident it can be done; we have further ideas for designing sync systems which we'll share in our next essay.
+For this prototype, our goal was to rapidly explore the experience of building with local data, so we reduced scope by building a _local-only_ prototype which doesn't actually do multi-device sync. Syncing a SQLite database across devices is a problem others have already solved (e.g., James Long's CRDT-based approach in [Actual Budget](https://archive.jlongster.com/using-crdts-in-the-wild)) so we're confident it can be done. We also have further ideas for thoughtfully designing sync systems which we'll share in our next essay.
 
 In this section, we’ll demo our prototype by showing how to use it to build a simplified iTunes-style music app. Our music collection is a very natural fit for a relational schema containing several normalized tables linked by foreign keys. Each track has an ID and name, and belongs to exactly one album:
 
@@ -697,13 +697,8 @@ So, we could view the queries and template together as a large, tree-structured 
 
 ![](/assets/essays/prelude/query-graph.png)
 
-<p>
 Since both the queries and the templates are pure functions of the base state, we can look at our entire component tree as one giant query that defines a particular view of the data.
-<Aside>
-This perspective ends up looking a lot like <a href="https://www.scattered-thoughts.net/writing/relational-ui/">Relational UI</a>, a relational language for defining UIs: the app is <em>defined</em> as query over the data, with results that define the UI elements on the screen.
-</Aside>
-This view is precisely analogous to the concept of a &ldquo;view&rdquo; in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
-</p>
+This view is precisely analogous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
 
 In this light, the problem of maintaining the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
 We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
@@ -720,43 +715,42 @@ Second, <a href="https://twitter.com/andy_matuschak/status/1452438198668328960">
 
 Third, we found that treating the data format as a core interface for an app solves many problems that are plague modern apps. Many users who are familiar with standard UNIX tools and conventions speak wistfully of “plain text” data formats, despite its disadvantages. We feel that plain text is an unfortunate way to store data in general, but recognize what these users long for: a source of truth that is *legible* outside of the application, possibly in ways that the application developer never anticipated. As we saw in our TablePlus demo, data-based interoperability provides these advantages while also providing the advantages of a structured file format.
 
-## Towards a reactive, relational approach to state management
+## Towards a more radical approach
 
-Our early investigations suggest that a local-first, data-centric architecture radically simplifies some parts of app development.
-We also know that it is at least somewhat practical: we've managed to build a real app that works with moderate amounts of data and has good performance.
-These experiments make us particularly excited about the transferability of insights and technologies from the database research community to the domain of app development.
+So far, we've argued that using reactive relational queries to store and reshape data in an app has simplified the stack. However, if we zoom out and look at all the steps involved in building an app, we'll realize that we've actually only addressed one slice of the problem so far.
 
-### Taking "everything is a query" even further
+In this section, we zoom out and describe a more radical approach to spreading reactive relational queries further up and down the stack. These ideas are more speculative and we haven't yet substantiated them with concrete implementations, but we think they're worth pursuing.
 
-Many modern app development frameworks adopt a sort of circular data flow: the UI is rendered as a pure function of some underlying state, and when the user performs some actions those trigger events, which cause cascading changes in the state and therefore the UI.
-Traditionally, there's a lot of work to propagate that change all the way through:
-1. Some kind of event manager needs to validate the event ("was it really safe to delete that playlist?") and apply it to the data.
-In a traditional web app, the event manager is the backend, but in a local-first architecture this is commonly done by a CRDT library such as Automerge.
-2. The app's business logic updates various pieces of derived state: for example, a playlist deletion would need to update the playlists shown in the sidebar, and possibly also update some metadata on the songs that were in that playlist.
-This would traditionally be done in either the model and controller of a Rails-style app, or in perhaps in imperative Javascript.
-3. The frontend needs to update the actual UI elements---and ultimately the pixels shown on the screen---in response to the changes in the business logic.
-In our example, we might need to switch back to some home screen if the deleted playlist was selected by the user.
-In many modern apps, this is done using a frontend framework like React or Svelte.
+### View templates as queries
 
-In this light, our prototype explored the extent to which we could replace the second step with reactive queries.
-If we take the perspective that an entire component tree is a query, we could say that these reactive queries extend into the third step, as well, although that third step is managed for us by React.
+So far, in our prototype, we've delegated rendering to React. The database's responsibility ends at updating derived data views; React is responsible for rendering those into view templates and applying updates to the DOM:
 
-![](/assets/essays/prelude/one-query.png)
+![](/assets/essays/prelude/pipeline-1.png)
 
-One could imagine pushing this "everything is a query" perspective even further, though.
-Instead of viewing the entire app as a relational view that represents a tree of DOM nodes, we could imagine replacing the DOM entirely and have Riffle represent the _pixels on the screen_ as the results of a single large query.
-We could also extend the stack in the other direction by treating the application of events in an event log into readable data as a query as well, as in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html).
+This has been great for rapid prototyping, but the combination of these two systems causes problems. It's harder to understand behavior as a whole, and the system is slower than it needs to be. What if we removed React (or any other rendering library) from the stack, and used reactive relational queries to directly render view templates?
 
-Taken to the extreme, we end up with a minimal model of an interactive app, where users take actions that are recorded in an event log, and then those actions cause changes in a UI described entirely by a declarative query.
+![](/assets/essays/prelude/pipeline-2.png)
+
+It's difficult to imagine doing this in a language like SQL, but with a different relational language and a careful approach to templating, it's plausible. Jamie Brandon has explored this direction in his work on [Relational UI](https://www.scattered-thoughts.net/writing/relational-ui/).
+
+### CRDTs as queries
+
+There's yet another part of the stack that we've mostly ignored in this essay. In many collaborative apps, we need to turn _events_ representing user actions into some _base state_ that's seen by all users. One common approach to this step is to use [Conflict-Free Replicated Data Types](https://crdt.tech/) (CRDTs), which ensure that all users see the same state even if their events got applied in different orders:
+
+![](/assets/essays/prelude/pipeline-3.png)
+
+Typically, CRDTs are developed for maintaining specific kinds of data structures, by reasoning very carefully about commutativity properties. However, there's an elegant idea of representing CRDTs in a more general way: as a declarative, relational query that turns a set of events into a final state—as seen in Martin Kleppmann's [implementation of a text CRDT using Datalog](https://martin.kleppmann.com/2018/02/26/dagstuhl-data-consistency.html). This suggests it might be possible to subsume CRDTs into the full-stack relational query as well:
+
+![](/assets/essays/prelude/pipeline-4.png)
+
+Taken to the extreme, we've ended up with a strange model of an interactive app, as a sort of full-stack query. Users take actions that are added to an unordered set of events, and then the DOM minimally updates in response. The entire computation in between is handled by a single relational query.
 
 ### What might compressing the stack into a query get us?
 
-While this is clean and elegant concept, there's a natural question of whether it actually leads to any progress in our quest to make app development simpler, faster, and more powerful.
-There are some benefits from _stack compression_, where what were previously a set of disparate technologies--event handling, data querying, and UI rendering--can be represented in a uniform way.
-However, we think that the primary benefit of this uniformity comes from the ability to more easily _reason across the layers of the stack_.
+This may seem like an elegant concept, but there's a natural question of whether it would actually lead to any progress in our quest to make app development simpler, faster, and more powerful. We think that the key benefit would be making it _easier to reason across layers of the stack._
 
 For example, let's consider performance.
-User-facing apps face performance challenges that don't show up in other types of programs, especially when it comes to _latency_. Users are [exquisitely](https://www.inkandswitch.com/slow-software/) [sensitive](https://danluu.com/input-lag/) to even small amounts of latency, and we believe that low latency is a key property of the types of creative tools that we're excited about.
+Users are [exquisitely](https://www.inkandswitch.com/slow-software/) [sensitive](https://danluu.com/input-lag/) to even small amounts of latency, and we believe that low latency is a key property of the types of creative tools that we're excited about.
 A key challenge in building performant apps is performing _incremental updates_: it's often much easier to describe how to build the UI from scratch than to figure out how it must update in response to a new event, but it's often too expensive to rebuild the UI from scratch every frame as in immediate-mode GUI tools.
 Indeed, a key lesson from React and other virtual DOM-based tools is finding a way to automatically transform a build-from-scratch description of the UI into an incremental one.
 
