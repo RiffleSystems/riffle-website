@@ -51,15 +51,13 @@ Today, building interactive apps is so hard that it's a specialized skill even a
 Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are disempowered entirely.
 We think that it should be possible to make app development radically more accessible to experts and novices alike.
 
-Consider an app like iTunes.
-The core user interface is pretty simple: it manages a music collection and displays a variety of custom views of that collection organized by various properties like the album, artist, or genre.
-As anyone who has tried to _build_ an app like that knows, that conceptual simpliciy doesn't mean that the app is actually easy to build.
+Consider a music player app like iTunes.
+The core user interface is simple: it manages a music collection and displays a variety of custom views organized by various properties like the album, artist, or genre.
+As anyone who has tried to _build_ an app like that knows, that conceptual simplicity doesn't mean that the app is actually easy to build.
 As a result, we think that there are millions of these "data-centric" apps that don't exist because they are too hard to build relative to the size of their audience.
 
-TK drop in iTunes screenshot??
-
 <p>
-Our key hypothesis is that app development is hard in large part because <strong>managing state is hard</strong>.
+In data-centric apps, <strong>much of the complexity of building and modifying the app comes from managing and propagating state.</strong>
 <Aside>
 Here's an interesting thought experiment.
 Many software developers think that it is much easier to build command line tools than GUI apps, or even text-user interface (TUI) apps.
@@ -69,12 +67,11 @@ One answer is that command line tools tend to be <em>stateless</em> in between u
 A user gives the program some instructions, and it executes them, then discards all of the hidden state before returning control to the user.
 In contrast, most apps have some kind of persistent state—often quite a lot—that needs to be maintained and updated as the user takes actions.
 </Aside>
-Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propagating state.
 In some sense, state management is the main thing that <em>makes an app an app</em>, and distinguishes app development from related tasks like data visualization.
-If you think of an app like iTunes, most of what it's doing for you over, say, a command line music player is display a bunch of dynamic state and provide tools for editing it.
+Most of what iTunes does is display a bunch of dynamic state and provide tools for editing it.
 What song is playing, and what's in the queue?
 What songs are in this playlist, and in what order?
-There's a good chance that your own favourite GUI app--a slide editor, an exercise tracker, a note taking tool--has this same structure.
+There's a good chance that your own favourite GUI app--a slide editor, an exercise tracker, a note taking tool--has the same basic structure.
 </p>
 
 We've found that state managment tends to be a colossal pain.
