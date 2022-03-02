@@ -15,7 +15,6 @@
   },
   "dependencies": {
     "lodash": "^4.17.21",
-    "preact": "^10.6.6",
-    "rehype-autolink-headings": "^6.1.1"
+    "preact": "^10.6.6"
   }
 }
