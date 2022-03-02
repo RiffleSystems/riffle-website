@@ -66,57 +66,40 @@ Especially in data-centric apps, a large part of the complexity of building and 
 In some sense, state management is the main thing that <em>makes an app an app</em>, and distinguishes app development from related tasks like data visualization.
 </p>
 
-In a traditional desktop app, state is usually split between app's main memory and various external stores, like filesystems and embedded databases.
-Notably, shifting between these tends to be a heavy operation, rather than a core part of the app's business logic.
+In a traditional desktop app, state is usually split between app's main memory and external stores like filesystems and embedded databases, which are cumbersome to coordinate.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
-Web apps have many redundant data representations spanning across the backend and frontend: for example, a "simple" app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript.
+A "simple" web app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript:
 
 ![](/assets/essays/prelude/layers.png)
 
-While each layer may be justifiable in isolation, the need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To reason about performance, developers must carefully design caching and indexing strategies at every level of the stack. Even advanced developers invest enormous effort to create performant, reliable apps.
+The need to work across all these layers results in tremendous complexity. Adding a new feature to an app often requires writing code in many languages at many layers. Understanding the behavior of an entire system requires tracking down code and data dependencies across process and network boundaries. To optimize performance, developers must carefully design caching and indexing strategies at every level.
+
+How might we simplify this stack?
 
 <p>
-We think a promising approach to simplifying this stack is a <a href="https://www.inkandswitch.com/local-first/">local-first</a> architecture where all data is stored locally on the client, available to be freely read and modified at any time.
+We think one promising pattern is a <a href="https://www.inkandswitch.com/local-first/"><strong>local-first architecture</strong></a> where all data is stored locally on the client, available to be freely edited at any time, and synchronized across clients whenever a network is available.
 <Aside>
 In addition to benefits for developers, a local-first architecture also helps end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 </Aside>
-When a network connection is available, changes are synchronized across clients, enabling real-time collaboration when clients are all online.
-It might seem that a local-first architecture would make applications <em>more complicated</em> to build—after all, in a traditional cloud architecture, supporting offline mode is indeed complicated—but we think that with the right tools it can make app development substantially simpler.
+This architecture <strong>allows rich, low-latency access to application state</strong>, which could unlock totally new patterns for managing state.
+If an app developer could rely on a sufficiently powerful <em>local state management layer</em>, then their UI code could just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates.
 </p>
 
-In particular, **local-first allows rich, low-latency access to application state**.
-With the data close at hand on a client device, could we take more integrated approaches to computing with data that make it easier for developers to build and debug their applications? Can we make apps more performant by default? Could apps become more customizable and composable by end users?
-If an application developer could rely on a sufficiently powerful _local state management layer_, then their UI code could just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates.
-
 <p>
-What might such a powerful state management layer look like?
+This raises the question: what might such a powerful state management layer look like?
 It turns out that researchers and engineers have worked for decades on systems that specialize in managing state: databases!
 <Aside>
-The power of client-side databases is already well-known in some contexts—many complex desktop and mobile apps (e.g. Adobe Lightroom, Apple Photos and Google Chrome) use the SQLite embedded relational database to manage data. However, we think there is room to go even further by more deeply integrating a database with the app development stack.
+The word &ldquo;database&rdquo; may conjure an image of a specific kind of system, but in this essay we use the word expansively to refer to any system that specializes in managing state. A traditional relational database contains many parts: a storage engine, a query optimizer, a query execution engine, a data model, an access control manager, a concurrency control system, all of which provide different kinds of value. In our view, a system doesn't even need to offer long-term persistence to be called a database.
 </Aside>
 We think that <strong>many of the technical challenges in client-side application development can be solved by ideas originating in the databases community</strong>.
 As a simple example, frontend programmers commonly build data structures tailored to looking up by a particular attribute; databases solve precisely the same problem with <em>indexes</em>, which offer more powerful and automated solutions.
-We see especially great promise in applying recent research on better relational languages and fast incremental view maintenance to app development.
+Beyond this simple example, we see great promise in applying more recent research on better relational languages for expressing computations, and incremental view maintenance for efficiently keeping queries updated.
 </p>
 
-<p>
-In early discussions of this idea, we found that the word &ldquo;database&rdquo; can mean several different things.
-A traditional relational database management system like PostgreSQL is a bundle of several technologies: a storage engine, a query optimizer, a query execution engine, a data model, an access control manager, a concurrency control system, and so on.
-More exotic databases, like various NoSQL data stores, drop some of these features, but generally maintain a shared goal of persisting data.
-In our view, persistence is not the essential feature of a database.
-Instead, we take an inclusive definition, and use &ldquo;database&rdquo; to refer to any system that specializes in state management.
-<Aside>
-For example, we'd argue that a single shared JSON object or hash table that stores all of the data for an app is a type of a database, although not an especially featureful one.
-We think that being too prescriptive with the word database quickly ends up in &ldquo;is a taco a sandwich?&rdquo; territory.
-</Aside>
-In part, this is a short hand: we found &ldquo;state management system&rdquo; too wordy to use again and again.
-More importantly, we think that any system for managing state over time can benefit from adopting database technologies, even if the result is a non-central example of a database.
-</p>
+In the Riffle project, our goal is to apply ideas from local-first software and databases research to radically simplify app development.
+In this essay, we start by proposing some [design principles](#principles) for achieving this simplification. We think that a relational model, fast reactivity, and a unified approach to state form a potent trio, which we call the _reactive relational_ model. We've also built a [concrete prototype](#prototype-system-sqlite--react) implementing this idea using SQLite and React, and have used the prototype to build some apps.
 
-In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
-So far, we've formulated some [design principles](#principles) for applying database technologies to app development, and built an [initial prototype](#prototype-system-sqlite--react) using existing tools like SQLite and React.
-Although our prototype has many limitations and doesn't yet express the entirety of the design principles that we started with, we've learned a lot from using it to build apps, and we share some of our concrete [findings](#findings) in this essay.
-In sum, our early explorations suggest a [viable path toward making app development much simpler](#towards-a-reactive-relational-approach-to-state-management).
+So far, we've [found promising signs](#findings) that the reactive relational model can help developers more easily and debug apps, produce better apps for end-users, and offers intriguing possibilites for data-centric interoperability between apps. However, we've also encountered [challenges](#sql-is-a-mediocre-language-for-ui-development) from trying to build toward this vision using existing tools. We conclude by sketching a more [radical approach](#towards-a-more-radical-approach) to representing an entire full-stack application as a single reactive relational query.
 
 ## Principles
 
