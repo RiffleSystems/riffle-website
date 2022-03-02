@@ -7,9 +7,9 @@
 .toc {
   position: sticky;
   top: 0;
-  padding: 1rem 0;
+  padding: 1rem 0 1rem 1%;
   float: right;
-  margin-right: -60%;
+  margin-right: -59%;
   width: 50%;
   margin-top: 0.3rem;
   margin-bottom: 0;
