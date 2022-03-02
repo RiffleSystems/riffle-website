@@ -470,7 +470,7 @@ Interestingly, because we’re using a controlled component, every keystroke the
 
 It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet.
 
-In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later in Findings we discuss what to do about the cases where it's not fast enough.) As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
+In our experience so far, SQLite can run most queries fast enough to make this approach work. (We discuss what can be done in cases where it isn't fast enough [later](#findings).) As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
 
 <video controls="controls" muted="muted" src="/assets/essays/prelude/selection.mp4" playsinline="" />
 
