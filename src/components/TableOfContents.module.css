@@ -6,38 +6,41 @@
 
 .toc {
   position: sticky;
-  top: 0;
-  padding: 1rem 0 1rem 1%;
-  float: right;
-  margin-right: -59%;
-  width: 50%;
+  top: 5rem;
+  padding: 1rem 0.5rem 1rem 1%;
+  float: left;
+  margin-left: -53%;
+  width: 46%;
   margin-top: 0.3rem;
   margin-bottom: 0;
   font-size: 80%;
-  vertical-align: baseline;
-  background: var(--color-gray-50);
-  z-index: 2;
-  border-bottom: solid thin var(--color-gray-300);
+  border-right: solid thin var(--color-gray-200);
+  border-bottom: none;
+  min-height: 25rem;
 }
 
 .toc .tocHeaderLink {
+  color: var(--color-gray-500);
   text-decoration: none !important;
 }
 
 .toc .tocHeaderLink:hover {
+  color: var(--theme-accent);
   text-decoration: solid underline !important;
 }
 
 .subheader {
-  margin-left: 1rem;
-  margin-top: 0.4rem;
   line-height: 1;
+  margin-left: 1rem;
+  margin-top: 0.5rem;
 }
 
 .header {
-  margin-top: 0.3rem;
+  line-height: 1;
+  margin-top: 0.8rem;
 }
 
-.active {
+.toc .tocHeaderLink.active {
+  color: var(--theme-accent);
   font-weight: bold;
 }
