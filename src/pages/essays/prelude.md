@@ -49,7 +49,14 @@ While we've only scratched the surface so far, we think that a framework based o
 
 Today, building interactive apps is so hard that it's a specialized skill even among software developers.
 Skilled technical computer users, including scientists and systems programmers, struggle to make simple apps, while less technical end-users are disempowered entirely.
-Like many other researchers, we'd like to make app development radically more accessible to experts and novices alike.
+We think that it should be possible to make app development radically more accessible to experts and novices alike.
+
+Consider an app like iTunes.
+The core user interface is pretty simple: it manages a music collection and displays a variety of custom views of that collection organized by various properties like the album, artist, or genre.
+As anyone who has tried to _build_ an app like that knows, that conceptual simpliciy doesn't mean that the app is actually easy to build.
+As a result, we think that there are millions of these "data-centric" apps that don't exist because they are too hard to build relative to the size of their audience.
+
+TK drop in iTunes screenshot??
 
 <p>
 Our key hypothesis is that app development is hard in large part because <strong>managing state is hard</strong>.
@@ -64,8 +71,13 @@ In contrast, most apps have some kind of persistent state—often quite a lot—
 </Aside>
 Especially in data-centric apps, a large part of the complexity of building and modifying the app comes from managing and propagating state.
 In some sense, state management is the main thing that <em>makes an app an app</em>, and distinguishes app development from related tasks like data visualization.
+If you think of an app like iTunes, most of what it's doing for you over, say, a command line music player is display a bunch of dynamic state and provide tools for editing it.
+What song is playing, and what's in the queue?
+What songs are in this playlist, and in what order?
+There's a good chance that your own favourite GUI app--a slide editor, an exercise tracker, a note taking tool--has this same structure.
 </p>
 
+We've found that state managment tends to be a colossal pain.
 In a traditional desktop app, state is usually split between app's main memory and external stores like filesystems and embedded databases, which are cumbersome to coordinate.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 A "simple" web app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript:
@@ -82,7 +94,7 @@ We think one promising pattern is a <a href="https://www.inkandswitch.com/local-
 In addition to benefits for developers, a local-first architecture also helps end-users by giving them more ownership and control over their own data, and allowing apps to remain usable when the network is spotty or nonexistent.
 </Aside>
 This architecture <strong>allows rich, low-latency access to application state</strong>, which could unlock totally new patterns for managing state.
-If an app developer could rely on a sufficiently powerful <em>local state management layer</em>, then their UI code could just read and write local data, without worrying about synchronizing data, sending API requests, caching, or optimistically applying local updates.
+If an app developer could rely on a sufficiently powerful <em>local state management layer</em>, then their UI code could just read and write local data, without worrying about synchronizing data, sending API requests, caching, or other chores of app development.
 </p>
 
 <p>
@@ -97,9 +109,11 @@ Beyond this simple example, we see great promise in applying more recent researc
 </p>
 
 In the Riffle project, our goal is to apply ideas from local-first software and databases research to radically simplify app development.
-In this essay, we start by proposing some [design principles](#principles) for achieving this simplification. We think that a relational model, fast reactivity, and a unified approach to state form a potent trio, which we call the _reactive relational_ model. We've also built a [concrete prototype](#prototype-system-sqlite--react) implementing this idea using SQLite and React, and have used the prototype to build some apps.
+In this essay, we start by proposing some [design principles](#principles) for achieving this simplification. We think that a relational model, fast reactivity, and unified approach that treats all state the same way form a potent trio, which we call the _reactive relational_ model. We've also built a [concrete prototype](#prototype-system-sqlite--react) implementing this idea using SQLite and React, and have used the prototype to build some apps that we can actually use.
 
-So far, we've [found promising signs](#findings) that the reactive relational model can help developers more easily and debug apps, produce better apps for end-users, and offers intriguing possibilites for data-centric interoperability between apps. However, we've also encountered [challenges](#sql-is-a-mediocre-language-for-ui-development) from trying to build toward this vision using existing tools. We conclude by sketching a more [radical approach](#towards-a-more-radical-approach) to representing an entire full-stack application as a single reactive relational query.
+So far, we've [found promising signs](#findings) that the reactive relational model can help developers more easily and debug apps, produce better apps for end-users, and offers intriguing possibilites for data-centric interoperability between apps.
+We've also encountered [challenges](#sql-is-a-mediocre-language-for-ui-development) from trying to build toward this vision using existing tools.
+We conclude by sketching a more [radical approach](#towards-a-more-radical-approach) to representing an entire full-stack application as a single reactive relational query, which we think could be a big step towards making app development radically easier for both experts and novices.
 
 ## Principles
 
