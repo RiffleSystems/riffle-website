@@ -576,8 +576,14 @@ However, we found that relational queries created intriguing opportunities to un
   </figcaption>
 </figure>
 
-This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model. Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
+<p>
+This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model.
+<Aside>
+One example of a thoughtful interface for debugging in a dataflow graph is <a href="https://observablehq.com/@observablehq/introducing-visual-dataflow">Observable's dependency visualization.</a>
+</Aside>
+Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
+</p>
 
 It's interesting to compare this set-wise debugging from debuggers in imperative programs.
 Imperative debuggers can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
