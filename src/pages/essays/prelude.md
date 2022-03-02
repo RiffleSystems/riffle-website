@@ -393,7 +393,9 @@ const TrackList = () => {
 <p>
 Next, we need to actually use this state to sort the tracks.
 <Aside>
-The function that generates our SQL query can use a <tt>get</tt> operator to read other reactive values. This doesn't just read the current value; it creates a reactive dependency.
+This query doesn't just read the current value; it creates a reactive dependency.
+It's a bit hard to read because we're relying on string interpolation, since SQLite's dialect of SQL has no way to dynamically control the sort order using a relation.
+With a different language than SQL, one could imagine writing this in a more relational way that doesn't involve string interpolation at all.
 </Aside>
 We can interpolate the sort property and sort order into a SQL query that fetches the tracks:
 </p>
@@ -410,10 +412,6 @@ from (${get(tracksQuery.queryString)}) -- use tracks as a subquery
 This new query for sorted tracks depends on the local component state, as well as the original tracks query:
 
 ![](/assets/essays/prelude/component-2.png)
-
-This query is pretty ugly, especially since we're relying on string interpolation to connect two pieces of the data in the database.
-This is an unfortunate limitation of the tooling we've used for this experiment: SQLite's dialect of SQL has no way to dynamically control the sort oder using a relation, so we have to use Javascript string interpolation instead.
-Ignoring the technical limitations, once can imagine writing this in a more relational way that doesn't involve string interpolation at all.
 
 Now if we populate the list of tracks from this query, when we click the table headers, we see the table reactively update:
 
@@ -569,7 +567,14 @@ In addition, few frontend developers are deeply familiar with SQL, and it feels 
 However, we found that relational queries created intriguing opportunities to understand data transformations <em>dynamically</em> while an app is running. Because the underlying query model provides so much structure, we were able to prototype a primitive debugger which visualizes component state, query strings, and reactive dependencies, all live within the context of the running interface:
 </p>
 
-<video controls="controls" muted="muted" src="/assets/essays/prelude/debugger.mp4" playsinline="" />
+<figure>
+  <img src="/assets/essays/prelude/debugger.png" />
+  <figcaption>
+    <Markdown>
+      This debugger pane shows ① on the left, a list of various database tables (spanning both app state and UI state), ② in the middle, live views of tabular data, ③ on the right, live views of SQL queries which are being dynamically generated at runtime.
+    </Markdown>
+  </figcaption>
+</figure>
 
 This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model. Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
 This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
@@ -624,10 +629,13 @@ We’re big fans of data normalization, but it’s very convenient to nest data 
 </li>
 
 <li>
-SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely. In our prototype, we even ended up adding a small GraphQL layer on top of SQL for ergonomic reasons.
+SQL syntax is verbose and non-uniform. SQL makes the hard things possible, but the simple things aren’t easy. Often, making small changes to the query requires rewriting it completely.
 </li>
 <li>
 SQL’s scalar expression language is weird and limited. Often, we wanted to factor out a scalar expression for re-use, but doing this in SQLite was annoying enough that we didn’t do it often.
+</li>
+<li>
+SQL doesn't have good tools for metaprogramming and changing the shape of a query at runtime: e.g., adding or removing a `where` filter clause depending on some data in the database. This forced us to often resort to using JavaScript string interpolation.
 </li>
 </ol>
 
