@@ -151,7 +151,7 @@ We think relational queries in the client UI is a pattern that deserves to be mo
 
 ### Fast reactive queries provide a clean mental model
 
-A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. Frameworks like [React](https://reactjs.org/), [Svelte](https://svelte.dev/), and [Solid]() have popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
+A *reactive* system tracks dependencies between data and automatically keeps downstream data updated, so that the developer doesn't need to manually propagate change. Frameworks like [React](https://reactjs.org/), [Svelte](https://svelte.dev/), and [Solid](https://www.solidjs.com/) have popularized this style in web UI development, and end-users have built complex reactive programs in spreadsheets for decades.
 
 However, database queries are often not included in the core reactive loop. When a query to a backend database requires an expensive network request, it's impractical to keep a query constantly updated in real-time; instead, database reads and writes are modeled as *side effects* which must interact with the reactive system. Many applications only pull new data when the user makes an explicit request like reloading a page; doing real-time pushes usually requires carefully designing a manual approach to sending diffs between a server and client. This limits the scope of the reactivity: the UI is guaranteed to show the latest local state, but not the latest state from the database.
 
