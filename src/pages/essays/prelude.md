@@ -425,7 +425,7 @@ Second, we can achieve more **efficient execution** by pushing computations down
 
 Finally, UI state is **persistent by default**. It’s often convenient for end-users to have state like sort order or scroll position persisted, but it takes active work for app developers to add these kinds of features. In Riffle, persistence comes for free, although ephemeral state is still easily achievable by setting up component keys accordingly.
 
-### Doing full text search in the database
+### Full text search
 
 Next, let’s add a search box where the user can type to filter the list of tracks by track, album, or artist name. We can add the current search term as a new column in the track list’s component state:
 
@@ -468,15 +468,13 @@ Now, when the user types into the search box, their search term appears and filt
 
 Interestingly, because we’re using a controlled component, every keystroke the user types must round trip through the Riffle database before it is shown on the screen, which imposes tight constraints on database latency: ideally we want to finish updating the input and all its downstream dependencies within a few milliseconds.
 
-It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet. In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later in Findings we discuss what to do about the cases where it's not fast enough.)
+It's unusual to send user input through the database before showing it on the screen, but there’s a major advantage to this approach. If we can consistently achieve this performance budget and refresh our reactive queries *synchronously*, the application becomes easier to reason about, because it always shows a single consistent state at any point in time. For example, we don’t need to worry about handling the case where the input text has changed but the rest of the application hasn’t reacted yet.
 
-### Selection state in the database
-
-As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
+In our experience so far, SQLite can run most queries fast enough to make this approach work. (Later in Findings we discuss what to do about the cases where it's not fast enough.) As another example of how fast a local datastore can be, we can store the currently selected track in the database. Selecting tracks with the mouse or keyboard feels responsive, even though it's round-tripping through the database every time the selection changes:
 
 <video controls="controls" muted="muted" src="/assets/essays/prelude/selection.mp4" playsinline="" />
 
-### Building virtualized list rendering from scratch
+### Virtualized list rendering
 
 Personal music collections can get large—it’s not uncommon for one person to collect hundreds of thousands of songs over time. With a large collection, it’s too slow to render all the rows of the list to the DOM, so we need to use *virtualized* list rendering: only putting the actually visible rows into the DOM, with some buffer above and below.
 
@@ -522,7 +520,9 @@ This simple approach to virtualized list rendering turns out to be fast enough t
 
  Because all the data is available locally and we can query it quickly, we don’t need to reason about manual caches or downloading paginated batches of data; we can simply declaratively query for the data we want given the current state of the view.
 
-### Editing UI state from another app
+### Editing data across apps
+
+One possibility we found particularly intriguing about our prototype was the ability to edit data across apps, using the database as an intermediary.
 
 When using the desktop version of our app, the database is stored in a SQLite file on disk which can be opened in a generic SQL tool like [TablePlus](https://tableplus.com/). This is helpful for debugging, but we can go further: we can even _modify the UI state_ of the app from the generic tool, e.g. changing the search term or sort order. In the video below, we can see the UI reacts as the database contents change.
 
@@ -554,17 +554,24 @@ So far, it appears that the basic model is viable, but much work remains to make
 
 Overall, working with our prototype system made us optimistic that this is a promising direction for simplifying application development. At the same time, it also clarified some of the challenges to making this approach truly work. Here are some of our reflections.
 
-### Relational queries make it easier to understand running programs
+### Structured queries make it easier to understand an app
 
-We began with the observation that a lot of program complexity comes from managing state and propagating state changes, and that declarative queries are a natural, ergonomic way to express those data transformations.
+The Riffle model produces a highly structured app. Each component contains:
 
-<p>
-In practice, writing data transformations in SQL helped less than we expected from the perspective of <em>statically</em> understanding code, i.e. reading code in a text editor.
-<Aside>
-Why was SQL not more helpful for reading code? For one, SQL is not an especially ergonomic language for many of the transformations that an app developer needs, especially those that involve returning nested data types.
-In addition, few frontend developers are deeply familiar with SQL, and it feels distinctly out-of-place in the middle of a React app.
-</Aside>
-However, we found that relational queries created intriguing opportunities to understand data transformations <em>dynamically</em> while an app is running. Because the underlying query model provides so much structure, we were able to prototype a primitive debugger which visualizes component state, query strings, and reactive dependencies, all live within the context of the running interface:
+- local relational **state**
+- reactive **queries** that transform data
+- a **view template** for rendering DOM nodes and registering event handlers
+
+These components are organized into a tree, where components can pass down access to their queries (and state) to their children:
+
+![](/assets/essays/prelude/component-tree.png)
+
+In some sense, the view template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
+So, we can view the queries and template together as a large, tree-structured view of the data—the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries. All dependencies are known by the system at runtime.
+
+![](/assets/essays/prelude/query-graph.png)
+
+In general, we found that thinking about our app in these terms made it easier to reason about behavior. You could imagine the pictures above being shown live as a visual debugger view. We spent a few days prototyping a very primitive debugger:
 </p>
 
 <figure>
@@ -576,20 +583,20 @@ However, we found that relational queries created intriguing opportunities to un
   </figcaption>
 </figure>
 
+Even this basic debugger proved highly useful, because it enabled us to ask "why is this UI element showing up this way?", and trace back the chain of computations through the tree of queries. It reminded us of debugging a spreadsheet, where pure formulas can always explain  the contents of the sheet. Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
+
 <p>
-This is just the result of a few days of prototyping; we think there are much richer possibilities for debugging UIs on top of this model.
+This debugger UI isn't yet rich enough to fully deliver on the promise, but we're optimistic that the underlying structure of the state model will make it easier to develop full-featured debug views.
 <Aside>
 One example of a thoughtful interface for debugging in a dataflow graph is <a href="https://observablehq.com/@observablehq/introducing-visual-dataflow">Observable's dependency visualization.</a>
 </Aside>
-Since our queries are tightly bound to UI components, being able to look at the "data behind the UI" made it much easier to hunt down the particular step in the transformation pipeline that had the bug.
-This feature was so useful that we found ourselves reaching for a hacky alternative in versions of Riffle where the debugger was broken: adding logic to dump query results to a table in the database, and inspecting those in TablePlus.
 </p>
 
 It's interesting to compare this set-wise debugging from debuggers in imperative programs.
 Imperative debuggers can iterate through a for-loop (or equivalently, a map) but we usually don't see all the data at once.
 The pervasive use of relational queries seems to be a better fit for debugging data-intensive programs, although we feel that we've only scratched the surface of the problem.
 
-### Both users and developers can benefit from a unified approach to UI data and app data
+### Users and developers benefit from unified state
 
 We found it nice to treat all data, whether ephemeral "UI data" or persistent "app data", in a uniform way, and to think of persistence as a lightweight property of some data, rather than a foundational part of the data model.
 
@@ -602,7 +609,7 @@ This did lead to another observation, though: in this model, we can decouple _re
 
 Another challenge was fitting compound UI state like nested objects or sequences into the relational model. For now, we've addressed this challenge by serializing this kind of state into a single scalar value within the relational database. However, this approach feels haphazard, and it seems important to find more ergonomic relational patterns for storing common kinds of UI state.
 
-### Migrations are a challenge, and existing tooling makes them painful.
+### Migrations are a challenge
 
 In our experience, migrations are a consistent pain when working with SQL databases.
 However, our prototype created entirely new levels of pain because of the frequency with which our schema changed.
@@ -619,7 +626,7 @@ In most cases, we chose to simply delete the relevant tables and recreate them w
 Of course, Riffle is not the first system to struggle with migrations; indeed, one of us has already done [extensive work on migrations for local-first software](https://www.inkandswitch.com/cambria/).
 We believe that making migrations simpler and more ergonomic is a key requirement for making database-managed state as ergonomic as frontend-managed state.
 
-### SQL has shortcomings for UI development
+### SQL is a mediocre language for UI development
 
 We were initially very enthusiastic about unlocking the power of SQL in a web app. We found a lot to like in SQL: the relational model provides a lot of advantages, query optimizers are very powerful, and a large number of people, including many who aren’t “software developers” can understand and even write it.
 
@@ -683,25 +690,6 @@ However, to preserve idiomatic React patterns (like passing component dependenci
 Rendering to the DOM has been another source of performance problems. We've seen cases where the data for a playlist of tracks can be loaded in <1ms, but the browser takes hundreds of milliseconds to compute the CSS styles and layout.
 
 We think there are reasonable solutions to each of these performance challenges in isolation, but we suspect the best solution is a more integrated system that doesn't build on existing layers like SQlite and React.
-
-### It's useful to model an app as a declarative query over the app state
-
-This version of Riffle was built on top of React, but while React components are (special) functions, a Riffle component is much more highly structured.
-Conceptually, a component is a combination of some queries that implement the data transformations, a JSX template for rendering that component to the DOM, and a set of event handlers for responding to user actions.
-As in React, our components are organized into a tree, where components can pass down access to their queries (and state) to their children.
-
-![](/assets/essays/prelude/component-tree.png)
-
-In some sense, the template is also a "query": it's a pure function of the data returned by the queries, and its expressed in a declarative, rather than imperative style!
-So, we could view the queries and template together as a large, tree-structured view of the data. The tree of components that define the app is a reactive, directed graph where the sources are the base tables, the sinks are the DOM templates, and the two are connected by a tree of queries.
-
-![](/assets/essays/prelude/query-graph.png)
-
-Since both the queries and the templates are pure functions of the base state, we can look at our entire component tree as one giant query that defines a particular view of the data.
-This view is precisely analogous to the concept of a "view" in SQL database, except that instead of containing tabular data, it is a tree of DOM nodes.
-
-In this light, the problem of maintaining the app "view" as the user interacts with the app is a problem of _incremental view maintenance_, a problem that has been the subject of decades of research in the database community.
-We elaborate on this connection below, but we believe that there are opportunities to apply ideas from incremental view maintenance to build fast and understandable app frameworks.
 
 ### Data-based interoperability offers advantages over action-based APIs.
 
