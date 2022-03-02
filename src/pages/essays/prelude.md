@@ -105,7 +105,8 @@ More importantly, we think that any system for managing state over time can bene
 </p>
 
 In the Riffle project, we're interested in building on these ideas and taking them to the extreme, exploring their full implications across the entire UI stack.
-To start exploring these ideas in practice, we've built an initial prototype: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri. Building apps using the prototype has already yielded some insight into opportunities and challenges, which we share in this essay.
+To start exploring these ideas in practice, we've built an initial prototype: a reactive framework for SQLite, integrated with React.js to power apps running both in the browser and on the desktop using Tauri.
+Building apps using the prototype has already yielded some insight into opportunities and challenges, which we share in this essay.
 
 ## Principles
 
