@@ -700,7 +700,7 @@ We believe that making migrations simpler and more ergonomic is a key requiremen
 
 So far, we've argued that using reactive relational queries to store and reshape data in an app has simplified the stack. However, if we zoom out and look at all the steps involved in building an app, we'll realize that we've actually only addressed one slice of the problem so far.
 
-In this section, we zoom out and describe a more radical approach to spreading reactive relational queries further up and down the stack. These ideas are more speculative and we haven't yet substantiated them with concrete implementations, but we think they're worth pursuing.
+In this section, we describe a more radical approach to spreading reactive relational queries further up and down the stack. These ideas are more speculative and we haven't yet substantiated them with concrete implementations, but we think they're worth pursuing.
 
 ### View templates as queries
 
