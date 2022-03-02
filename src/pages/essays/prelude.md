@@ -339,7 +339,7 @@ The UI looks like this:
 <p>
 Importantly, this query doesn’t just execute once when the app boots. It’s a <strong>reactive query</strong>, so any time the relevant contents of the database change, the component will re-render with the new results.
 <Aside>
-Currently our prototype implements a naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1 millisecond.
+Currently our prototype implements the most naive reactivity approach: re-running all queries from scratch any time their dependencies change. This still turns out to usually be fast enough because SQLite can run many common queries in under 1 millisecond. Once it becomes necessary, we plan to introduce table-granularity reactivity as an improved approach.
 </Aside>
 For example, when we add a new track to the database, the list updates automatically.
 </p>

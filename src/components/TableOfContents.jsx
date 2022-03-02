@@ -6,6 +6,7 @@ export const TableOfContents = (props) => {
 
   const [activeSlug, setActiveSlug] = useState(null);
 
+  // Get the top-level header above a given header
   const getParent = (header) => {
     if (header === undefined) {
       return undefined;
@@ -20,6 +21,8 @@ export const TableOfContents = (props) => {
       .slice(-1)[0];
   };
 
+  // Should we show a given header in the TOC?
+  // We show all top-level headers, and only subheaders in the currently active section
   const isHeaderVisible = (header) => {
     if (header.depth === 2) {
       return true;
@@ -32,6 +35,8 @@ export const TableOfContents = (props) => {
     }
   };
 
+  // Is the header "active"?
+  // The active header is the subheader being read, and the top-level header above that
   const isHeaderActive = (header) => {
     const activeHeader = headers.find((h) => h.slug === activeSlug);
     if (activeHeader === undefined) return false;
