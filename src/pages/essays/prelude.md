@@ -82,7 +82,7 @@ What songs are in this playlist, and in what order?
 There's a good chance that your own favourite GUI app--a slide editor, an exercise tracker, a note taking tool--has the same basic structure.
 </p>
 
-We've found that state managment tends to be a colossal pain.
+We've found that state management tends to be a colossal pain.
 In a traditional desktop app, state is usually split between app's main memory and external stores like filesystems and embedded databases, which are cumbersome to coordinate.
 In a web app, the situation is even worse: the app developer has to thread the state through from the backend database to the frontend and back.
 A "simple" web app might use a relational database queried via SQL, an ORM on a backend server, a REST API used via HTTP requests, and objects in a rich client-side application, further manipulated in Javascript:
@@ -224,7 +224,7 @@ We pin part of the blame on SQL: as we learned while building our prototype, it'
 We also think that there's something of a chicken-and-egg problem.
 Because databases don't have the prominent role in app development that we imagine they could, no one appears to have built a database with the right set of performance tradeoffs for app-based workloads.
 For example, few databases are optimized for the low latencies that are necessary for interactive apps.
-Finally, we think that it might not have been possible to use a database for storing UI-specific, ephermeral state when many modern UI paradigms were developed.
+Finally, we think that it might not have been possible to use a database for storing UI-specific, ephemeral state when many modern UI paradigms were developed.
 However, modern hardware is just really, really fast, which opens up new architectures.
 </Aside>
 But in a unified system, these could just be lightweight checkboxes, not entirely different systems.
