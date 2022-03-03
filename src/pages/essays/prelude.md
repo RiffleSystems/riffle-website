@@ -165,7 +165,7 @@ However, database queries are often not included in the core reactive loop. When
 <p>
 In a local-first architecture where queries are much cheaper to run, we can take a different approach. The developer can register <em>reactive queries</em>, where the system guarantees that they will be updated in response to changing data.
 <Aside>
-This approach is closely related to the <em>document functional reactive programming (DFRP)</em> model introduced in <a href="(https://www.inkandswitch.com/pushpin/">Pushpin</a>, except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
+This approach is closely related to the <em>document functional reactive programming (DFRP)</em> model introduced in <a href="https://www.inkandswitch.com/pushpin/">Pushpin</a>, except that we use a relational database rather than a JSON CRDT as our data store, and access them using a query language instead of a frontend language like Javascript.
 We can also <a href="https://www.youtube.com/watch?v=_ISAA_Jt9kI">create reactive derived values from our data outside of the tree of UI elements</a>, as in React state management frameworks like <a href="https://jotai.org/">Jotai</a> and <a href="https://recoiljs.org/">Recoil</a>.
 <br /><br />
 This is also related to cloud reactive datastores like <a href="https://firebase.google.com/">Firebase</a> and <a href="https://www.meteor.com/">Meteor</a>, but storing data on-device rather than on a server enables fundamentally different usage patterns.
