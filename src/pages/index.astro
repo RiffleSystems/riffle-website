@@ -21,7 +21,7 @@ let permalink = "https://riffle.systems/";
 // Data Fetching: List all Markdown posts in the repo.
 
 let allPosts = await Astro.fetchContent("./essays/*.md");
-allPosts = sortBy(allPosts, "publishDate").reverse();
+allPosts = sortBy(allPosts, "publishDate");
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
@@ -67,10 +67,12 @@ allPosts = sortBy(allPosts, "publishDate").reverse();
           </p>
           <p>
             By <a href="https://www.geoffreylitt.com/">Geoffrey Litt</a>,
-			<a href="https://nicholasschiefer.com/">Nicholas Schiefer</a>,
-			<a href="https://twitter.com/schickling">Johannes Schickling</a> and
-			<a href="http://people.csail.mit.edu/dnj/">Daniel Jackson</a> at
-            the <a href="https://sdg.csail.mit.edu/">MIT CSAIL Software Design Group</a>.
+            <a href="https://nicholasschiefer.com/">Nicholas Schiefer</a>,
+            <a href="https://twitter.com/schickling">Johannes Schickling</a> and
+            <a href="http://people.csail.mit.edu/dnj/">Daniel Jackson</a> at the
+            <a href="https://sdg.csail.mit.edu/"
+              >MIT CSAIL Software Design Group</a
+            >.
           </p>
         </section>
 
