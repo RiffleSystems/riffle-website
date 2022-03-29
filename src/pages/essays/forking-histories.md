@@ -263,6 +263,15 @@ description:
       actions affected an overlapping set of photos. How should these edits be
       merged? We present three options, shown in Figure 1.
     </p>
+        <figure>
+      <img width="100%" src="/assets/essays/forking-histories/venn-diagrams-draft.svg" />
+      <figcaption aria-hidden="true">
+        After syncing, the application state is forked into two histories, one
+        where each user’s change was applied. The history with Alice’s change is
+        tagged as the default. After the users manually reconcile, the albums no
+        longer overlap.
+      </figcaption>
+    </figure>
     <h5 id="independent-style-properties.">Independent style properties.</h5>
     <p>
       One solution is to minimize conflicts. We could model saturation and
@@ -444,7 +453,7 @@ description:
       history with Alice’s edits applied as the default.
     </p>
     <figure>
-      <embed src="media/forking.pdf" />
+      <img width="100%" src="/assets/essays/forking-histories/forking.svg" />
       <figcaption aria-hidden="true">
         After syncing, the application state is forked into two histories, one
         where each user’s change was applied. The history with Alice’s change is
