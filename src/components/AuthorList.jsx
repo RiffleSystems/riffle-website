@@ -4,6 +4,10 @@ import { h } from "preact";
 export const AuthorList = (props) => {
   const { authors } = props;
 
+  if (!authors || authors.length === 0) {
+    return null;
+  }
+
   const flattenedAuthors = [];
   let hasEqualOrder = false;
   for (const authorOrEqual of authors) {

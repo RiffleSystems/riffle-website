@@ -16,7 +16,7 @@ authors:
     link: https://twitter.com/schickling
   - name: Daniel Jackson
     link: http://people.csail.mit.edu/dnj/
-publishDate: 2 March 2022
+publishDate: 2022 March
 draft: false
 description: "We're exploring an approach to simplifying app development: storing all application and UI state in a client-side reactive relational database that provides a structured dataflow model."
 previewImage: "assets/essays/prelude/reactive.png"
